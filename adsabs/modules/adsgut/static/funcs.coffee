@@ -41,7 +41,11 @@ parse_fqin = (fqin) ->
 
 format_item = ($sel, iteminfo) ->
   #console.log '{',iteminfo,'}'
+<<<<<<< HEAD
   [year, month, leave] = if iteminfo.pubdate then iteminfo.pubdate.split('-') else [undefined, undefined, undefined]
+=======
+  [year, month, leave] = iteminfo.pubdate?.split('-')
+>>>>>>> ui and code fixes for mumber of items
   if month is undefined
     pubdate = year ? "unknown"
   else
