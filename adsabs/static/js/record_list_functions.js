@@ -69,6 +69,7 @@ var ResultListManager = function() {
 	        		"OK": function() {
 	        			var numRecords = $( "#record_slider" ).slider( "value" );
 	        			$(this).dialog('close');
+                        console.log("NUM1", numRecords);
 	        			ok_callback(numRecords);
 	        		},
                     "Cancel": function() {

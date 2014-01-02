@@ -297,6 +297,7 @@ class AppConfig(object):
                    'skymap':1000,
                    'export_other':3000,
                    'export_library': 500,
+                   'export_library': 100,
                    }
     DEFAULT_EXPORTS = {'metrics':300, 
                    'wordcloud':750, 
