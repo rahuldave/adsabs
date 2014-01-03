@@ -265,7 +265,6 @@ var ResultListManager = function() {
 					RLM.ajax_submit(url, false, null, {'closeBtn': false});
         		})
         	}
-        }
 	}
 
 }();
