@@ -10,6 +10,9 @@ cdict=(fqin, l)->
     return d
 
 
+parse_fqin = (fqin) -> 
+    vals=fqin.split(':')
+    return vals[-1+vals.length]
 
 #bug we dont have target set for this
 enval = (tag) ->
@@ -130,6 +133,7 @@ class ItemView extends Backbone.View
             pill: '<span class="badge badge-default tag-badge" style="margin-right:3px;">{0}</span>&nbsp;&nbsp;&nbsp;&nbsp;',
             add_pill: '<span class="label label-info tag-badge" style="margin-right:3px;margin-left:7px;">add tag</span>&nbsp;',
             input_pill: '<span></span>&nbsp;'
+            ok_icon: '<btn class="btn btn-primary">Apply</btn>'
     jslist=[]
     @.$('.tagls').tags(jslist,tagdict)
     @tagsobject = jslist[0]
@@ -244,6 +248,7 @@ class ItemsView extends Backbone.View
     "click .tag" : "submitTags"
     "click .done" : "iDone"
     "click .cancel" : "iCancel"
+    "click .libsub" : "subNewLib"
 
   initialize: (options) ->
     {@stags, @notes, @$el, @postings, @memberable, @items, @nameable, @itemtype, @loc, @noteform, @suggestions, @pview} = options
@@ -323,6 +328,7 @@ class ItemsView extends Backbone.View
     cback = (data) =>
         #console.log data
         libs=_.union(data.libraries, data.groups)
+        #console.log "libsa", libs
         $ctrls.append(w.postalall_form(@nameable, @itemtype, libs))
         tagdict = 
             enhanceValue: _.bind(enval, this)
@@ -335,17 +341,53 @@ class ItemsView extends Backbone.View
                 pill: '<span class="badge badge-default tag-badge" style="margin-right:3px;">{0}</span>&nbsp;&nbsp;&nbsp;&nbsp;',
                 add_pill: '<span class="label label-info tag-badge" style="margin-right:3px;margin-left:7px;">add tag</span>&nbsp;',
                 input_pill: '<span></span>&nbsp;'
+                ok_icon: '<btn class="btn btn-primary">Apply</btn>'
+
         jslist=[]
         @.$('#alltags').tags(jslist,tagdict)
         #console.log("MULTILIBRARY", @.$('.multilibrary'))
+        #enableFiltering: true,
         @.$('.multilibrary').multiselect({
                         includeSelectAllOption: true,
-                        enableFiltering: true,
                         maxHeight: 150
         })
         @globaltagsobject = jslist[0]
     syncs.get_postables_writable(@memberable.nick, cback, eback)
     return this
+
+  subNewLib: =>
+    #console?.log "in sublib"
+    postable = 
+        name: @.$('.libtxt').val()
+        description: ''
+    postabletype = "library"
+    @.$('.libtxt').empty()
+
+    eback = (xhr, etext) =>
+        alert 'Did not succeed'
+
+    cback2 = (data) =>
+            libs=_.union(data.libraries, data.groups)
+            librarychoicedict={}
+            for c in libs
+                librarychoicedict[c]=parse_fqin(c)
+                if postable.name==librarychoicedict[c]
+                    value = c
+            #console.log "libs", libs, data, @.$('.multilibrary')
+            @.$('.posthorizontal').empty()
+            @.$('.posthorizontal').append(w.postcontrol(libs, librarychoicedict))
+            @.$('.multilibrary').multiselect({
+                            includeSelectAllOption: true,
+                            maxHeight: 150
+            })
+            if value
+                @.$('.multilibrary').multiselect('select', value)
+
+    cback = (data) =>
+        #console.log("data", data, @memberable.nick)   
+        syncs.get_postables_writable(@memberable.nick, cback2, eback)
+        
+    syncs.create_postable(postable, postabletype, cback, eback)
 
   iCancel: => 
     $.fancybox.close()

@@ -508,6 +508,7 @@ def userItems(nick):
 #DELETION methods not there BUG
 
 #BUG: check currentuser useras stuff here
+#BUG: postable really a tuple. change to reflect that
 def createPostable(g, request, ptstr):
     spec={}
     jsonpost=dict(request.json)
