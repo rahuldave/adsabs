@@ -11,13 +11,13 @@
   h = teacup;
 
   do_postform = function(sections, config) {
-    var $itemssec, itemsInfoURL, itemsTPURL, itemtype, loc, memberable, nam, tagsucwtURL;
-    itemsInfoURL = config.itemsInfoURL, itemsTPURL = config.itemsTPURL, tagsucwtURL = config.tagsucwtURL, memberable = config.memberable, itemtype = config.itemtype, nam = config.nam, loc = config.loc;
+    var $itemssec, itemsInfoURL, itemsTPURL, itemstring, itemtype, loc, memberable, nam, tagsucwtURL;
+    itemstring = config.itemstring, itemsInfoURL = config.itemsInfoURL, itemsTPURL = config.itemsTPURL, tagsucwtURL = config.tagsucwtURL, memberable = config.memberable, itemtype = config.itemtype, nam = config.nam, loc = config.loc;
     $itemssec = sections.$itemssec;
     return $.get("" + tagsucwtURL + "?tagtype=ads/tagtype:tag", function(data) {
       var suggestions;
       suggestions = data.simpletags;
-      return $.get(itemsInfoURL, function(data) {
+      return syncs.post_for_itemsinfo(itemsInfoURL, itemstring, function(data) {
         var i, itemlist, itemsq, thecount, theitems;
         theitems = data.items;
         thecount = data.count;
