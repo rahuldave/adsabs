@@ -12,11 +12,11 @@ do_postform = (sections, config) ->
         syncs.post_for_itemsinfo itemsInfoURL, itemstring, (data) ->
             theitems=data.items
             thecount=data.count
-            itemlist=("items=#{encodeURIComponent(i.basic.fqin)}" for i in theitems)
+            itemlist=(i.basic.fqin for i in theitems)
             itemsq=itemlist.join("&")
-            #console.log "ITEMSQAA", theitems, itemlist
 
-            $.get "#{config.itemsTPURL}?#{itemsq}", (data)->
+            #$.get "#{config.itemsTPURL}?#{itemsq}", (data)->
+            syncs.taggings_postings_post_get itemlist, 'none', (data) ->
                 [stags, notes]=get_taggings(data)
                 postings={}
                 for own k,v of data.postings

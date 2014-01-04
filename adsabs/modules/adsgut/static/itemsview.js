@@ -275,12 +275,12 @@
       } else {
         this.update_notes([notetext, notemode]);
         if (!this.therebenotes) {
-          this.$el.append("<p class='notes'></p>");
+          this.$el.append("<table class='notes'></table>");
           this.therebenotes = true;
         }
         d = new Date();
         notetime = d.toISOString();
-        this.$('.notes tbody').prepend(format_row(notetext, notemode, notetime, this.memberable, this.memberable, false, this.pview));
+        this.$('.notes').prepend(format_row(notetext, notemode, notetime, this.memberable, this.memberable, false, this.pview));
         this.hv.hide();
         this.$('.txt').val("");
         this.submittable.state = true;

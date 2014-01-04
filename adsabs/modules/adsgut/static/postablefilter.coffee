@@ -62,6 +62,7 @@ do_postable_filter = (sections, config, tagfunc) ->
             sections.$bigqueryform.attr("action", config.bq2url)
             itemsq=itemlist.join("&")
             #$.get "#{config.itPURL}?#{itemsq}", (data)->
+            #console.log "itemlist", itemlist
             syncs.taggings_postings_post_get itemlist, config.pview, (data)->
                 #console.log "POSTINGS", data.postings, config.fqpn
                 #console.log "TG", data.taggings

@@ -189,7 +189,7 @@ class ItemView extends Backbone.View
         else
             notemode = @pview
     ctxt = @pview
-    #console.log "NOTESPEC",notetext, notemode
+    #console.log "NOTESPEC",notetext, notemode, ctxt
     loc=window.location
     cback = (data) =>
         #console.log "return data", data, loc
@@ -204,15 +204,15 @@ class ItemView extends Backbone.View
         #console.log "in ajax submit"
         syncs.submit_note(item, itemname, [notetext, notemode], ctxt, cback, eback)
     else
-        #console.log "NO AJAX IN NOTES"
+        #console.log "NO AJAX IN NOTES", @therebenotes
         @update_notes([notetext, notemode])
         if not @therebenotes
             #console.log "there werent notes before"
-            @$el.append("<p class='notes'></p>")
+            @$el.append("<table class='notes'></table>")
             @therebenotes=true
         d = new Date()
         notetime=d.toISOString()
-        @.$('.notes tbody').prepend(format_row(notetext, notemode, notetime, @memberable, @memberable, false, @pview))
+        @.$('.notes').prepend(format_row(notetext, notemode, notetime, @memberable, @memberable, false, @pview))
         @hv.hide()
         @.$('.txt').val("")
         @submittable.state = true
