@@ -23,7 +23,7 @@ enval = (tag) ->
         #tag.text = '<a class="tag-link" ' + title + ' target="' + tagger.options.tag_link_target + '" href="' + tag.url + '">' + tag.text + '</a>';
         tag.id = tag.text
         tag.text = '<a class="tag-link" ' + title +  '" href="' + tag.url + '">' + tag.text + '</a>';
-
+        tag.by = true
         #console.log("taggb",tag);
     return tag
 
@@ -46,16 +46,21 @@ addwoa = (tag, cback) ->
 
 remIndiv = (pill) ->
     tag = $(pill).attr('data-tag-id')
-    #console.log "TAGALOG", tag, pill
+    #console.log "TAGALOG", tag, pill, @tagajaxsubmit
     if not @tagajaxsubmit
         #console.log "OLDNEWTAGS1", @tagajaxsubmit, @newtags
         @remove_from_tags(tag)
         #console.log "NEWNEWTAGS", @newtags
     else
-        #console.log "INDIVREM2", @tagajaxsubmit
+        eback = (xhr, etext) =>
+            alert 'Did not succeed'
+        cback = (data) =>
+        syncs.remove_tagging(@item.basic.fqin, tag, cback, eback)
 
 time_format_iv = (timestring) ->
     return timestring.split('.')[0].split('T').join(" at ")
+
+
 class ItemView extends Backbone.View
      
   tagName: 'div'
@@ -63,6 +68,7 @@ class ItemView extends Backbone.View
 
   events:
     "click .notebtn" : "submitNote"
+    "click .removenote" : "removeNote"
 
   initialize: (options) ->
     {@submittable, @counter, @stags, @notes, @item, @postings, @memberable, @noteform, @tagajaxsubmit, @suggestions, @pview} = options
@@ -75,7 +81,7 @@ class ItemView extends Backbone.View
     @therebenotes=false
     if @notes.length > 0
         @therebenotes=true
-    ##console.log "PVIEW IS", @pview
+    #console.log "PVIEW IS", @e,@pview
 
   update: (postings, notes, tags) =>
     @stags=tags
@@ -99,6 +105,15 @@ class ItemView extends Backbone.View
     @newnotes.push(newnotetuple)
     @submittable.state = true
 
+  remove_notes: (newnotetext) =>
+    #console.log "NN", newnotetext, @newnotes
+    newernotes=[]
+    for ele in @newnotes
+        if ele[0] != newnotetext
+            newernotes.push(ele)
+    @newnotes = newernotes
+    #console.log "NN2", @newnotes
+
   render: =>
     @$el.empty()
     adslocation = GlobalVariables.ADS_ABSTRACT_BASE_URL;
@@ -112,14 +127,14 @@ class ItemView extends Backbone.View
     content = ''
     content = content + htmlstring
     #additional = format_stuff(fqin, @memberable, cdict(fqin,@stags), cdict(fqin,@postings), cdict(fqin,@notes))
-    thetags = format_tags_for_item(fqin, cdict(fqin,@stags), @memberable.nick)
+    thetags = format_tags_for_item(fqin, cdict(fqin,@stags), @memberable, @tagajaxsubmit)
     additional = "<span class='tagls'></span><br/>"
     thepostings = format_postings_for_item(fqin, cdict(fqin, @postings), @memberable.nick)
     additionalpostings = "<strong>In Libraries</strong>: <span class='postls'>#{thepostings.join(', ')}</span><br/>"
     additional = additional + additionalpostings
     content = content + additional
     @$el.append(content)
-
+    #console.log "THETAGS", thetags, @memberable
     tagdict = 
         values: thetags
         enhanceValue: _.bind(enval, this)
@@ -170,11 +185,12 @@ class ItemView extends Backbone.View
     [stags, notes]=get_taggings(data)
     @stags=stags[fqin]
     @notes=notes[fqin]
-    @therebenotes = true
+    if @notes.length > 0
+        @therebenotes = true
     @render()
 
   submitNote: =>
-    #console.log "IN SUBMIT NOTE"
+    #console.log "IN SUBMIT NOTE", @pview, @f, @d, @e
     item=@item.basic.fqin
     itemname=@item.basic.name
     notetext= @.$('.txt').val()
@@ -208,14 +224,42 @@ class ItemView extends Backbone.View
         @update_notes([notetext, notemode])
         if not @therebenotes
             #console.log "there werent notes before"
-            @$el.append("<table class='notes'></table>")
+            #start = <table class='table-condensed table-striped'>
+            #end = </table>
+            @$el.append("<p class='notes'></p>")
+            @.$(".notes").append("<table class='table-condensed table-striped'></table>")
             @therebenotes=true
         d = new Date()
         notetime=d.toISOString()
-        @.$('.notes').prepend(format_row(notetext, notemode, notetime, @memberable, @memberable, false, @pview))
+        @.$('.notes table').prepend(format_row("randomid", notetext, notemode, notetime, @memberable, @memberable, false, @pview))
         @hv.hide()
         @.$('.txt').val("")
         @submittable.state = true
+    return false
+
+  removeNote: (e) =>
+    #console.log "IN REMOVE NOTE", @pview
+    item=@item.basic.fqin
+    itemname=@item.basic.name
+    $target =  $(e.currentTarget)
+    cback = (data) =>
+        #console.log "return data", data, loc
+        #window.location=loc
+        @update_note_ajax(data)
+        format_item(@$('.searchresultl'),@e)
+    eback = (xhr, etext) =>
+        #console.log "ERROR", etext, loc
+        #replace by a div alert from bootstrap
+        alert 'Did not succeed'
+    if @tagajaxsubmit
+        tagname = $target.attr('id')
+        syncs.remove_note(item, tagname, @pview, cback, eback)
+    else
+        #console.log "NO AJAX IN NOTES", @therebenotes
+        notetext = $target.parents("tr").find("td.notetext").text()
+        #console.log "NOTETEXT", notetext
+        @remove_notes(notetext)
+        $target.parents("tr").remove()
     return false
 
 

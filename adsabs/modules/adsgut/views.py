@@ -1167,6 +1167,30 @@ def tagsForItem(ns, itemname):
         return jsonify(taggings=taggingsdict, taggingtp=taggingsthispostable)
 ####These are the fromSpec family of functions for GET
 
+@adsgut.route('/tagsremove/<ns>/<itemname>', methods=['POST'])
+def tagsRemoveForItem(ns, itemname):
+    #taginfos=[{tagname/tagtype/description}]
+    #q=fieldlist=[('tagname',''), ('tagtype',''), ('context', None), ('fqin', None)]
+    ifqin=ns+"/"+itemname
+    if request.method == 'POST':
+        jsonpost=dict(request.json)
+        useras = _userpostget(g, jsonpost)
+        tagname=_dictp('tagname', jsonpost)
+        tagtype=_dictp('tagtype', jsonpost)
+        fqpn = _dictp('fqpn',jsonpost)
+        #will use useras for the namespace as u should only be removing your own stuff
+        fqtn = useras.nick+'/'+tagtype+":"+tagname
+        #KEY:IF i have a item it must exist, so this one is NOT used for items not yet there
+        #i=g.dbp._getItem(g.currentuser, ifqin)
+        val=g.dbp.untagItem(g.currentuser, useras, fqtn, ifqin)
+        taggingsdict, taggingsthispostable= g.dbp.getTaggingsConsistentWithUserAndItems(g.currentuser, useras, [ifqin], None, fqpn)
+        # taggingsdict={}
+        # taggingsdict[ifqin]=(count, taggings)
+        #return jsonify({'tags':tags, 'count':count})
+        return jsonify(taggings=taggingsdict, taggingtp=taggingsthispostable)
+    
+
+#BUG: havent put in fqpn here yet
 #multi item multi tag tagging on POST and get taggings
 @adsgut.route('/items/taggings', methods=['POST', 'GET'])
 def itemsTaggings():

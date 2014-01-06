@@ -39,6 +39,7 @@
       };
       tag.id = tag.text;
       tag.text = '<a class="tag-link" ' + title + '" href="' + tag.url + '">' + tag.text + '</a>';
+      tag.by = true;
     }
     return tag;
   };
@@ -58,12 +59,17 @@
   };
 
   remIndiv = function(pill) {
-    var tag;
+    var cback, eback, tag,
+      _this = this;
     tag = $(pill).attr('data-tag-id');
     if (!this.tagajaxsubmit) {
       return this.remove_from_tags(tag);
     } else {
-
+      eback = function(xhr, etext) {
+        return alert('Did not succeed');
+      };
+      cback = function(data) {};
+      return syncs.remove_tagging(this.item.basic.fqin, tag, cback, eback);
     }
   };
 
@@ -77,6 +83,9 @@
 
     function ItemView() {
       var _this = this;
+      this.removeNote = function(e) {
+        return ItemView.prototype.removeNote.apply(_this, arguments);
+      };
       this.submitNote = function() {
         return ItemView.prototype.submitNote.apply(_this, arguments);
       };
@@ -88,6 +97,9 @@
       };
       this.render = function() {
         return ItemView.prototype.render.apply(_this, arguments);
+      };
+      this.remove_notes = function(newnotetext) {
+        return ItemView.prototype.remove_notes.apply(_this, arguments);
       };
       this.update_notes = function(newnotetuple) {
         return ItemView.prototype.update_notes.apply(_this, arguments);
@@ -112,7 +124,8 @@
     ItemView.prototype.className = 'itemcontainer';
 
     ItemView.prototype.events = {
-      "click .notebtn": "submitNote"
+      "click .notebtn": "submitNote",
+      "click .removenote": "removeNote"
     };
 
     ItemView.prototype.initialize = function(options) {
@@ -154,6 +167,19 @@
       return this.submittable.state = true;
     };
 
+    ItemView.prototype.remove_notes = function(newnotetext) {
+      var ele, newernotes, _i, _len, _ref;
+      newernotes = [];
+      _ref = this.newnotes;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        ele = _ref[_i];
+        if (ele[0] !== newnotetext) {
+          newernotes.push(ele);
+        }
+      }
+      return this.newnotes = newernotes;
+    };
+
     ItemView.prototype.render = function() {
       var additional, additionalpostings, adslocation, content, fqin, htmlstring, jslist, tagdict, thepostings, thetags, url;
       this.$el.empty();
@@ -167,7 +193,7 @@
       fqin = this.item.basic.fqin;
       content = '';
       content = content + htmlstring;
-      thetags = format_tags_for_item(fqin, cdict(fqin, this.stags), this.memberable.nick);
+      thetags = format_tags_for_item(fqin, cdict(fqin, this.stags), this.memberable, this.tagajaxsubmit);
       additional = "<span class='tagls'></span><br/>";
       thepostings = format_postings_for_item(fqin, cdict(fqin, this.postings), this.memberable.nick);
       additionalpostings = "<strong>In Libraries</strong>: <span class='postls'>" + (thepostings.join(', ')) + "</span><br/>";
@@ -241,7 +267,9 @@
       _ref = get_taggings(data), stags = _ref[0], notes = _ref[1];
       this.stags = stags[fqin];
       this.notes = notes[fqin];
-      this.therebenotes = true;
+      if (this.notes.length > 0) {
+        this.therebenotes = true;
+      }
       return this.render();
     };
 
@@ -275,15 +303,40 @@
       } else {
         this.update_notes([notetext, notemode]);
         if (!this.therebenotes) {
-          this.$el.append("<table class='notes'></table>");
+          this.$el.append("<p class='notes'></p>");
+          this.$(".notes").append("<table class='table-condensed table-striped'></table>");
           this.therebenotes = true;
         }
         d = new Date();
         notetime = d.toISOString();
-        this.$('.notes').prepend(format_row(notetext, notemode, notetime, this.memberable, this.memberable, false, this.pview));
+        this.$('.notes table').prepend(format_row("randomid", notetext, notemode, notetime, this.memberable, this.memberable, false, this.pview));
         this.hv.hide();
         this.$('.txt').val("");
         this.submittable.state = true;
+      }
+      return false;
+    };
+
+    ItemView.prototype.removeNote = function(e) {
+      var $target, cback, eback, item, itemname, notetext, tagname,
+        _this = this;
+      item = this.item.basic.fqin;
+      itemname = this.item.basic.name;
+      $target = $(e.currentTarget);
+      cback = function(data) {
+        _this.update_note_ajax(data);
+        return format_item(_this.$('.searchresultl'), _this.e);
+      };
+      eback = function(xhr, etext) {
+        return alert('Did not succeed');
+      };
+      if (this.tagajaxsubmit) {
+        tagname = $target.attr('id');
+        syncs.remove_note(item, tagname, this.pview, cback, eback);
+      } else {
+        notetext = $target.parents("tr").find("td.notetext").text();
+        this.remove_notes(notetext);
+        $target.parents("tr").remove();
       }
       return false;
     };
