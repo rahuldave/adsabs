@@ -293,6 +293,10 @@ class ItemView extends Backbone.View
         @remove()
         #BUG:Also need to bubble it upstairs to collection dictionary
         #best reimplement this in proper backbone soon.
+        nump = $('#count').text()
+        ix = nump.search('papers')
+        nump=Number(nump[0...ix]) - 1
+        $('#count').text("#{nump} papers. ")
     eback = (xhr, etext) =>
         #console.log "ERROR", etext, loc
         #replace by a div alert from bootstrap

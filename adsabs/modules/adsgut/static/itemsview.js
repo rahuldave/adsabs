@@ -406,7 +406,13 @@
       item = this.item.basic.fqin;
       itemname = this.item.basic.name;
       cback = function(data) {
-        return _this.remove();
+        var ix, nump;
+        _this.remove();
+        nump = $('#count').text();
+        console.log("LLL", nump);
+        ix = nump.search('papers');
+        nump = Number(nump.slice(0, ix)) - 1;
+        return $('#count').text("" + nump + " papers. ");
       };
       eback = function(xhr, etext) {
         return alert('Did not succeed');
