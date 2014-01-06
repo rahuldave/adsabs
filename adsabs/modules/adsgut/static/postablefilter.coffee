@@ -67,6 +67,7 @@ do_postable_filter = (sections, config, tagfunc) ->
                 #console.log "POSTINGS", data.postings, config.fqpn
                 #console.log "TG", data.taggings
                 [stags, notes]=get_taggings(data)
+                #console.log "===", stags, notes
                 postings={}
                 times={}
                 for own k,v of data.postings
