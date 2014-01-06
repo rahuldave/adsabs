@@ -197,15 +197,15 @@
   };
 
   format_postings_for_item = function(fqin, postings, nick) {
-    var p, p2list, priv, publ;
+    var p, p2list, postingslist, priv, publ;
+    postingslist = _.uniq(postings[fqin]);
     publ = "adsgut/group:public";
     priv = "" + nick + "/group:default";
     p2list = (function() {
-      var _i, _len, _ref, _results;
-      _ref = postings[fqin];
+      var _i, _len, _results;
       _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        p = _ref[_i];
+      for (_i = 0, _len = postingslist.length; _i < _len; _i++) {
+        p = postingslist[_i];
         if (p !== publ && p !== priv && parse_fortype(p) !== "app") {
           _results.push("<a href=\"" + prefix + "/postable/" + p + "/filter/html\">" + (parse_fqin(p)) + "</a>");
         }

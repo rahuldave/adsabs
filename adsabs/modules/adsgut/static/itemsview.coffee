@@ -60,6 +60,21 @@ remIndiv = (pill) ->
 time_format_iv = (timestring) ->
     return timestring.split('.')[0].split('T').join(" at ")
 
+didupost = (postings, you, fqpn) ->
+    counter=0
+    youposted=false
+    for p in postings
+        if p[0]==fqpn
+            counter = counter + 1
+        if p[1]==you.adsid
+            youposted=true
+    #console.log postings, you, fqpn, counter, youposted
+    if youposted==true and counter > 1
+        return false
+    else if youposted==true and counter <= 1
+        return true
+    else if youposted==false
+        return false
 
 class ItemView extends Backbone.View
      
@@ -69,6 +84,7 @@ class ItemView extends Backbone.View
   events:
     "click .notebtn" : "submitNote"
     "click .removenote" : "removeNote"
+    "click .removeitem" : "removeItem"
 
   initialize: (options) ->
     {@submittable, @counter, @stags, @notes, @item, @postings, @memberable, @noteform, @tagajaxsubmit, @suggestions, @pview} = options
@@ -118,10 +134,14 @@ class ItemView extends Backbone.View
     @$el.empty()
     adslocation = GlobalVariables.ADS_ABSTRACT_BASE_URL;
     url=adslocation + "#{@item.basic.name}"
-    if @item.whenposted
-        htmlstring = "<div class='searchresultl'>(#{@counter}). <a href=\"#{url}\">#{@item.basic.name}</a>&nbsp;&nbsp;(saved #{time_format_iv(@item.whenposted)})</div>"
+    if @pview not in ['udg', 'pub', 'none'] and didupost(@postings, @memberable, @pview)
+        deleter = '<a class="removeitem" style="cursor:pointer;"><span class="i badge badge-important">x</span></a>'
     else
-        htmlstring = "<div class='searchresultl'>(#{@counter}). <a href=\"#{url}\">#{@item.basic.name}</a></div>"
+        deleter = ''
+    if @item.whenposted
+        htmlstring = "<div class='searchresultl'>(#{@counter}). <a href=\"#{url}\">#{@item.basic.name}</a>&nbsp;&nbsp;(saved #{time_format_iv(@item.whenposted)})&nbsp;&nbsp;#{deleter}</div>"
+    else
+        htmlstring = "<div class='searchresultl'>(#{@counter}). <a href=\"#{url}\">#{@item.basic.name}</a>&nbsp;&nbsp;#{deleter}</div>"
       
     fqin=@item.basic.fqin
     content = ''
@@ -129,7 +149,7 @@ class ItemView extends Backbone.View
     #additional = format_stuff(fqin, @memberable, cdict(fqin,@stags), cdict(fqin,@postings), cdict(fqin,@notes))
     thetags = format_tags_for_item(fqin, cdict(fqin,@stags), @memberable, @tagajaxsubmit)
     additional = "<span class='tagls'></span><br/>"
-    thepostings = format_postings_for_item(fqin, cdict(fqin, @postings), @memberable.nick)
+    thepostings = format_postings_for_item(fqin, cdict(fqin, (p[0] for p in @postings)), @memberable.nick)
     additionalpostings = "<strong>In Libraries</strong>: <span class='postls'>#{thepostings.join(', ')}</span><br/>"
     additional = additional + additionalpostings
     content = content + additional
@@ -163,14 +183,15 @@ class ItemView extends Backbone.View
             @$el.append("<p class='notes'></p>")
             #console.log "NOTES", @notes
             @.$('.notes').append(format_notes_for_item(fqin, cdict(fqin,@notes), @memberable.adsid, @pview))
+    @$el.append('<hr style="margin-top: 15px; margin-bottom: 10px;"/>')
     return this
 
   #this might be better implemented with underscore
   addToPostsView: () =>
     fqin=@item.basic.fqin
-    poststoshow=(p for p in @newposts when p not in @postings)
+    poststoshow=(p for p in @newposts when p not in (po[0] for po in @postings))
     thepostings = format_postings_for_item(fqin, cdict(fqin, poststoshow), @memberable.nick)
-    already = format_postings_for_item(fqin, cdict(fqin, @postings), @memberable.nick).join(', ')
+    already = format_postings_for_item(fqin, cdict(fqin, (p[0] for p in @postings)), @memberable.nick).join(', ')
     #console.log "THEPOSTINGS", thepostings, already
     inbet = ''
     if already != ''
@@ -262,7 +283,23 @@ class ItemView extends Backbone.View
         $target.parents("tr").remove()
     return false
 
-
+  removeItem: =>
+    #console.log "IN REMOVE NOTE", @pview
+    item=@item.basic.fqin
+    itemname=@item.basic.name
+    cback = (data) =>
+        #console.log "return data", data, loc
+        #window.location=loc
+        @remove()
+        #BUG:Also need to bubble it upstairs to collection dictionary
+        #best reimplement this in proper backbone soon.
+    eback = (xhr, etext) =>
+        #console.log "ERROR", etext, loc
+        #replace by a div alert from bootstrap
+        alert 'Did not succeed'
+    if @tagajaxsubmit
+        syncs.remove_items_from_postable([item], @pview, cback, eback)
+    return false
 
 addwoata = (tag, cback) ->
     #console.log "IN ADVOATA", tag
@@ -581,7 +618,7 @@ class ItemsFilterView extends Backbone.View
         v=new ItemView(ins)
         @$el.append(v.render().el)
         @itemviews[fqin] = v
-        @$el.append('<hr style="margin-top: 15px; margin-bottom: 10px;"/>')
+        #@$el.append('<hr style="margin-top: 15px; margin-bottom: 10px;"/>')
         counter = counter + 1
     return this
 

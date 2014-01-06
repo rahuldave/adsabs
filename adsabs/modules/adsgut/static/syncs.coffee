@@ -195,6 +195,14 @@ remove_tagging = (item, tagname, cback, eback) ->
         tagname: tagname
     send_params(url, data, cback, eback)
 
+remove_items_from_postable = (items, ctxt, cback, eback) ->
+    url= prefix+"/itemsremove"
+    data=
+        items: items
+    if ctxt not in ['udg', 'none', 'public']
+        data.fqpn = ctxt
+    send_params(url, data, cback, eback)
+
 submit_tags = (items, tags, cback, eback) ->
     tagtype= "ads/tagtype:tag"
     itemtype= "ads/itemtype:pub"
@@ -301,4 +309,5 @@ root.syncs=
     post_for_itemsinfo: post_for_itemsinfo
     remove_tagging: remove_tagging
     remove_note: remove_note
+    remove_items_from_postable: remove_items_from_postable
 

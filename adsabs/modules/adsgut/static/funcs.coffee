@@ -161,9 +161,10 @@ parse_fortype = (fqin) ->
 #     return ""
 
 format_postings_for_item = (fqin, postings, nick) ->
+  postingslist = _.uniq(postings[fqin])
   publ= "adsgut/group:public"
   priv= "#{nick}/group:default"
-  p2list=("<a href=\"#{prefix}/postable/#{p}/filter/html\">#{parse_fqin(p)}</a>" for p in postings[fqin] when p isnt publ and p isnt priv and parse_fortype(p) isnt "app")
+  p2list=("<a href=\"#{prefix}/postable/#{p}/filter/html\">#{parse_fqin(p)}</a>" for p in postingslist when p isnt publ and p isnt priv and parse_fortype(p) isnt "app")
   if p2list.length >0
     return p2list
   else

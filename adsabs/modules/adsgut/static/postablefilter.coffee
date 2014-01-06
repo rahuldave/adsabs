@@ -72,7 +72,7 @@ do_postable_filter = (sections, config, tagfunc) ->
                 times={}
                 for own k,v of data.postings
                     if v[0] > 0
-                        postings[k]=(e.posting.postfqin for e in v[1])
+                        postings[k]=([e.posting.postfqin, e.posting.postedby] for e in v[1])
                         ptimes = (e.posting.whenposted for e in v[1] when e.posting.postfqin==config.fqpn)
                         #console.log "PTIMES", ptimes
                         if ptimes.length > 0

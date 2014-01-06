@@ -1016,7 +1016,21 @@ def tagsForPostable(po, pt, pn):
 
 
 
-
+@adsgut.route('/itemsremove', methods=['POST'])
+def itemsremove():
+    ##useras?/name/itemtype
+    #q={useras?, userthere?, sort?, pagetuple?, criteria?, stags|tagnames ?, postables?}
+    if request.method=='POST':
+        jsonpost=dict(request.json)
+        fqpn = _dictp('fqpn', jsonpost)
+        useras = _userpostget(g, jsonpost)
+        items = _itemspostget(jsonpost)
+        if fqpn is None:
+            doabort("BAD_REQ", "No ipostable specified for item removal")
+        for itemfqin in items:
+            g.dbp.removeItemFromPostable(g.currentuser, useras, fqpn, itemfqin)
+        return jsonify({'status':'OK', 'info':items})
+  
 #post saveItems(s), get could get various things such as stags, postings, and taggings
 #get could take a bunch of items as arguments, or a query
 @adsgut.route('/items', methods=['POST', 'GET'])
