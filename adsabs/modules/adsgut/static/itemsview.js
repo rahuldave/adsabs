@@ -409,7 +409,6 @@
         var ix, nump;
         _this.remove();
         nump = $('#count').text();
-        console.log("LLL", nump);
         ix = nump.search('papers');
         nump = Number(nump.slice(0, ix)) - 1;
         return $('#count').text("" + nump + " papers. ");
