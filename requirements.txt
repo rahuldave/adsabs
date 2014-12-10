@@ -31,6 +31,7 @@ scrubber>=1.6.1
 simplejson>=3.3.0
 testtools>=0.9.32
 unittest2>=0.5.1
+pytest
 numpy
 xlwt
 reportlab==2.7
