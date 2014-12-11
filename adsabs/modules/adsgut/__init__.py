@@ -1,1 +1,1 @@
-from webservices import adsgut_blueprint as blueprint
+from webservices2 import adsgut_blueprint as blueprint

@@ -113,7 +113,7 @@ LIBINVSTRING="""
 "%s has invited you to ADS Library %s. Go to your libraries page to accept. 
 """
 def inviteToLibrary(useras, adsid, fqln, changerw=False):
-    ln=fqln.split(:)[-1]
+    ln=fqln.split(':')[-1]
     try:
         memberable=g.db._getUserForAdsid(g.currentuser, adsid)
     except:
@@ -431,9 +431,9 @@ def tagsForPostable(po, pt, pn):
 def remove_items(g, useras, items, fqpn):
     if fqpn is None:
             doabort("BAD_REQ", "No postable specified for item removal")
-        for itemfqin in items:
-            g.dbp.removeItemFromPostable(g.currentuser, useras, fqpn, itemfqin)
-        return jsonify({'status':'OK', 'info':items})
+    for itemfqin in items:
+        g.dbp.removeItemFromPostable(g.currentuser, useras, fqpn, itemfqin)
+    return jsonify({'status':'OK', 'info':items})
 
 @adsgut.route('/itemsremove', methods=['POST'])#fqpn/itemsto remove/user
 def itemsremove():

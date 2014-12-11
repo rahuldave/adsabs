@@ -98,6 +98,7 @@ def jsonify(*args, **kwargs):
 #This next set of functions is used to obtain various quantities
 #from http request GET and POST dictionaries in flask.
 
+global _dictg
 #FOR GET
 def _dictg(k,d, listmode=False):
     val=d.get(k, [None])
@@ -108,6 +109,7 @@ def _dictg(k,d, listmode=False):
     else:
         return val[0]
 
+global _dictp
 #FOR POST
 def _dictp(k,d, default=None):
     val=d.get(k, default)
@@ -115,13 +117,17 @@ def _dictp(k,d, default=None):
         d.pop(k)
     return val
 
+global _opppostget
 def _oppostget(postdict):
     op = _dictp('op', postdict)
     return op
 
+global _opget
 def _opget(qdict):
     op=_dictg('op', qdict)
     return op
+
+global _userpostget
 #gets a user from key useras in a POST request
 def _userpostget(g, postdict):
     nick=_dictp('useras', postdict)
@@ -131,6 +137,7 @@ def _userpostget(g, postdict):
         useras=g.currentuser
     return useras
 
+global _userget
 #gets a user from key useras in a GET request
 #userthere is used incase you want items just pertinent to the user
 def _userget(g, qdict):
@@ -150,6 +157,7 @@ def _userget(g, qdict):
 #which corresponds to and ascending sort. notee that i am currently
 #exposing the inners of the database. it would be better to use a table
 #to map this to user friendly names. TODO.
+global _sortget
 def _sortget(qdict):
     #a serialixed dict of ascending and field
     sortstring=_dictg('sort', qdict)
@@ -161,6 +169,7 @@ def _sortget(qdict):
     return sort
 
 #sortspec from POST
+global _sortpostget
 def _sortpostget(qdict):
     #a serialixed dict of ascending and field
     sortstring=_dictp('sort', qdict)
@@ -174,6 +183,7 @@ def _sortpostget(qdict):
 #criteria is a multiple ampersand list, with colon separators.
 #eg criteria=basic__fqin:eq:something&criteria=
 #we create from it a criteria list of dicts
+global _criteriaget
 def _criteriaget(qdict):
     critlist=_dictg('criteria', qdict, True)
     if not critlist[0]:
@@ -187,6 +197,7 @@ def _criteriaget(qdict):
 
 #a serialised dict of arbitrary keys, with mongo style encoding
 #operators are not represented here.(equality is assumed)
+global _queryget
 def _queryget(qdict):
     querylist=_dictg('query', qdict, True)
     if not querylist[0]:
@@ -201,6 +212,7 @@ def _queryget(qdict):
 
 #this is for pagination in the form pagetuplle=15:30
 #the first is the item number to start from(offset), the second is the pagestyle.
+global _pagetupleget
 def _pagtupleget(qdict):
     pagtuplestring=_dictg('pagtuple', qdict)
     if not pagtuplestring:
@@ -210,6 +222,7 @@ def _pagtupleget(qdict):
     return pagtuple
 
 #gets a list of items using their fqins
+global _itemsget
 def _itemsget(qdict):
     itemlist=_dictg('items', qdict, True)
     if not itemlist[0]:
@@ -217,6 +230,7 @@ def _itemsget(qdict):
     return itemlist
 
 #like above, but uses post
+global _itemspostget
 def _itemspostget(qdict):
     itemlist=_dictp('items', qdict)
     if not itemlist:
@@ -224,6 +238,7 @@ def _itemspostget(qdict):
     return itemlist
 
 #gets bibcodes from POST
+global _bibcodespostget
 def _bibcodespostget(qdict):
     itemlist=_dictp('bibcode', qdict)
     if not itemlist:
@@ -231,6 +246,7 @@ def _bibcodespostget(qdict):
     return itemlist
 
 #gets a list of libraries (using their fqpns)
+global _postablesget
 def _postablesget(qdict):
     plist=_dictp('postables', qdict)
     if not plist:
@@ -239,6 +255,7 @@ def _postablesget(qdict):
 
 #get items and tags from the POST
 #format is BLA
+global _itemstagspostget
 def _itemstagspostget(qdict):
     itemstagslist=_dictp('itemsandtags', qdict)
     if not itemstagslist:
@@ -248,6 +265,7 @@ def _itemstagspostget(qdict):
 
 #get tag specs from the POST
 #format is BLA
+global _tagspecspostget
 def _tagspecspostget(qdict):
     tagspecs=_dictp('tagspecs', qdict)
     if not tagspecs:
@@ -256,6 +274,7 @@ def _tagspecspostget(qdict):
 
 
 #sets up the tag spec to tag an item
+global _setupTagspec
 def _setupTagspec(ti, useras):
     #atleast one of name or content must be there (tag or note)
     if not (ti.has_key('name') or ti.has_key('content')):

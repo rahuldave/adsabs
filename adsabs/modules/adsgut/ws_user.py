@@ -1,58 +1,5 @@
 from ws_common import *
 
-dispatch_table_get = {
-    'apps':{
-        'isin':appsUserIsIn,
-        'owns':appsUserOwns,
-        'invitedto':appsUserIsInvitedTo
-    },
-    'groups':{
-        'isin':groupsUserIsIn,
-        'owns':groupsUserOwns,
-        'invitedto':groupsUserIsInvitedTo
-    },
-    'libraries':{
-        'isin':librariesUserIsIn,
-        'owns':librariesUserOwns,
-        'invitedto':librariesUserIsInvitedTo,
-        'canwriteto':librariesUserCanWriteTo
-    },
-    'tags':{
-        'owns': tagsUserOwns,
-        'asmember': tagsUserAsMember,
-        'canwriteto':tagsUserCanWriteTo
-    }
-}
-
-table_of_ops = {}
-for k in dispatch_table_get.keys():
-    t="get_"+k+"_user_"
-    k_table = dispatch_table_get[k]
-    for k2 in k_table.keys():
-        t2 = t + k2
-        table_of_ops[t2]=k_table[k2]
-
-@adsgut.route('/userN/<nick>')
-def userEntryPoint(nick):
-    if request.method=='GET':
-        query=dict(request.args)
-        op=_opget(query)
-        useras = _userget(g, query)
-        if op in table_of_ops.keys():
-            f = table_of_ops[op]
-            return f(nick)
-        else:#any other op or no op
-            return userInfo(nick)
-    elif request.method=='POST':
-        jsonpost=dict(request.json)
-        op=_oppostget('op')
-        useras = _userpostget(g, jsonpost)
-        if op in table_of_ops.keys():
-            f = table_of_ops[op]
-            return f(nick)
-        else:#any other op or no op
-            return userInfo(nick)
-
 #######################################################################################################################
 #Information about users, groups, and apps
 #######################################################################################################################
@@ -253,3 +200,58 @@ def tagsUserAsMember(nick):
     return jsonify(stagdict)
 
 ########################
+
+
+dispatch_table_get = {
+    'apps':{
+        'isin':appsUserIsIn,
+        'owns':appsUserOwns,
+        'invitedto':appsUserIsInvitedTo
+    },
+    'groups':{
+        'isin':groupsUserIsIn,
+        'owns':groupsUserOwns,
+        'invitedto':groupsUserIsInvitedTo
+    },
+    'libraries':{
+        'isin':librariesUserIsIn,
+        'owns':librariesUserOwns,
+        'invitedto':librariesUserIsInvitedTo,
+        'canwriteto':librariesUserCanWriteTo
+    },
+    'tags':{
+        'owns': tagsUserOwns,
+        'asmember': tagsUserAsMember,
+        'canwriteto':tagsUserCanWriteTo
+    }
+}
+
+table_of_ops = {}
+for k in dispatch_table_get.keys():
+    t="get_"+k+"_user_"
+    k_table = dispatch_table_get[k]
+    for k2 in k_table.keys():
+        t2 = t + k2
+        table_of_ops[t2]=k_table[k2]
+
+@adsgut.route('/userN/<nick>')
+def userEntryPoint(nick):
+    if request.method=='GET':
+        query=dict(request.args)
+        op=_opget(query)
+        useras = _userget(g, query)
+        if op in table_of_ops.keys():
+            f = table_of_ops[op]
+            return f(nick)
+        else:#any other op or no op
+            return userInfo(nick)
+    elif request.method=='POST':
+        jsonpost=dict(request.json)
+        op=_oppostget('op')
+        useras = _userpostget(g, jsonpost)
+        if op in table_of_ops.keys():
+            f = table_of_ops[op]
+            return f(nick)
+        else:#any other op or no op
+            return userInfo(nick)
+

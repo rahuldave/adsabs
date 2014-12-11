@@ -98,7 +98,7 @@ GRPINVSTRING="""
 You will be automatically enrolled in the library for that group.
 """
 def inviteToGroup(useras, adsid, fqgn):
-    gn=fqgn.split(:)[-1]
+    gn=fqgn.split(':')[-1]
     changerw=False
     try:
         memberable=g.db._getUserForAdsid(g.currentuser, adsid)
