@@ -169,8 +169,8 @@ def userItems(nick):
 @adsgut.route('/user/<nick>/tagsuserowns')
 def tagsUserOwns(nick):
     query=dict(request.args)
-    useras, usernick=_userget(g, query)
-    tagtype= _dictg('tagtype', query)
+    useras, usernick= userget(g, query)
+    tagtype= dictg('tagtype', query)
     stags=g.dbp.getTagsAsOwnerOnly(g.currentuser, useras, tagtype)
     stagdict={'simpletags':set([e.basic.name for e in stags[1]])}
     return jsonify(stagdict)
@@ -181,9 +181,9 @@ def tagsUserOwns(nick):
 @adsgut.route('/user/<nick>/tagsusercanwriteto')
 def tagsUserCanWriteTo(nick):
     query=dict(request.args)
-    useras, usernick=_userget(g, query)
-    tagtype= _dictg('tagtype', query)
-    fqpn = _dictg('fqpn',query)
+    useras, usernick= userget(g, query)
+    tagtype= dictg('tagtype', query)
+    fqpn = dictg('fqpn',query)
     stags=g.dbp.getAllTagsForUser(g.currentuser, useras, tagtype, False, fqpn)
     stagdict={'simpletags':set([e.basic.name for e in stags[1]])}
     return jsonify(stagdict)
@@ -192,9 +192,9 @@ def tagsUserCanWriteTo(nick):
 @adsgut.route('/user/<nick>/tagsasmember')
 def tagsUserAsMember(nick):
     query=dict(request.args)
-    useras, usernick=_userget(g, query)
-    tagtype= _dictg('tagtype', query)
-    fqpn = _dictg('fqpn',query)
+    useras, usernick= userget(g, query)
+    tagtype= dictg('tagtype', query)
+    fqpn = dictg('fqpn',query)
     stags=g.dbp.getTagsAsMemberOnly(g.currentuser, useras, tagtype, False, fqpn)
     stagdict={'simpletags':set([e.basic.name for e in stags[1]])}
     return jsonify(stagdict)
@@ -238,8 +238,8 @@ for k in dispatch_table_get.keys():
 def userEntryPoint(nick):
     if request.method=='GET':
         query=dict(request.args)
-        op=_opget(query)
-        useras = _userget(g, query)
+        op= opget(query)
+        useras = userget(g, query)
         if op in table_of_ops.keys():
             f = table_of_ops[op]
             return f(nick)
@@ -247,8 +247,8 @@ def userEntryPoint(nick):
             return userInfo(nick)
     elif request.method=='POST':
         jsonpost=dict(request.json)
-        op=_oppostget('op')
-        useras = _userpostget(g, jsonpost)
+        op= oppostget('op')
+        useras = userpostget(g, jsonpost)
         if op in table_of_ops.keys():
             f = table_of_ops[op]
             return f(nick)

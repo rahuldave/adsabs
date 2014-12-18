@@ -9,8 +9,8 @@ from ws_common import *
 def tags():
     if request.method=='POST':
         jsonpost=dict(request.json)
-        useras = _userpostget(g, jsonpost)
-        tagspecs=_tagspecspostget(jsonpost)
+        useras = userpostget(g, jsonpost)
+        tagspecs=tagspecspostget(jsonpost)
         newtags=[]
         for ti in tagspecs['tags']:
             if not ti.has_key('name'):
@@ -29,9 +29,9 @@ def tags():
         return jsonify(tags)
     else:
         query=dict(request.args)
-        useras, usernick=_userget(g, query)
+        useras, usernick=userget(g, query)
 
-        criteria= _criteriaget(query)
+        criteria= criteriaget(query)
         count, tags=g.dbp.getTagsForQuery(g.currentuser, useras,
             query, usernick, criteria)
         return jsonify({'tags':tags, 'count':count})
@@ -42,35 +42,35 @@ def itemEntryPoint(na, itemname):
     ifqin=ns+"/"+itemname
     if request.method=='GET':
         query=dict(request.args)
-        op=_opget(query)
-        useras, _ = _userget(g, query)
+        op=opget(query)
+        useras, _ = userget(g, query)
         if op=="get_tags":
-            sort = _sortget(query)
-            fqpn = _dictg('fqpn',query)
+            sort = sortget(query)
+            fqpn = dictg('fqpn',query)
             taggingsdict, taggingsthispostable, taggingsdefault= g.dbp.getTaggingsConsistentWithUserAndItems(g.currentuser, useras, [ifqin], sort, fqpn)
             return jsonify(fqpn=fqpn, taggings=taggingsdict, taggingtp=taggingsthispostable, taggingsdefault=taggingsdefault)
         elif op=="get_libraries":
-            sort = _sortget(query)
+            sort = sortget(query)
             items = [ifqin]
             return get_postings(g, useras, items, sort)
         else:#any other op or no op
-            sort = _sortget(query)
+            sort = sortget(query)
             items = [ifqin]
             return get_postings(g, useras, items, sort)
     elif request.method=='POST':
         jsonpost=dict(request.json)
-        op=_oppostget('op')
-        useras = _userpostget(g, jsonpost)
+        op=oppostget('op')
+        useras = userpostget(g, jsonpost)
 
         if op=="remove_tag":
             return tagsRemoveForItem(ns, itemname)
         elif op=="add_tags":
-            itemtype=_dictp('itemtype', jsonpost)
+            itemtype=dictp('itemtype', jsonpost)
             itemspec={'name':itemname, 'itemtype':itemtype}
             #we use the fqpn to get the return to only get tags consistent with a certain library
-            fqpn = _dictp('fqpn',jsonpost)
+            fqpn = dictp('fqpn',jsonpost)
             #get the tag specs
-            tagspecs=_tagspecspostget(jsonpost)
+            tagspecs=tagspecspostget(jsonpost)
             return add_tags(g, useras, itemspec, tagspecs, fqpn)
         else:#send an empty POST
             doabort('BAD_REQ', "No op given")
@@ -84,7 +84,7 @@ def add_tags(g, useras, itemspec, tagspecs, fqpn):
     if not tagspecs.has_key(i.basic.name):
         doabort('BAD_REQ', "No itemname specified to tag")
     for ti in tagspecs[i.basic.name]:
-        tagspec=_setupTagspec(ti, useras)
+        tagspec=setupTagspec(ti, useras)
         i,t,it,td=g.dbp.tagItem(g.currentuser, useras, i, tagspec)
         newtaggings.append(td)
     #get ALL the taggings consistent with this item and this user back
@@ -96,20 +96,20 @@ def tagsForItem(ns, itemname):
     ifqin=ns+"/"+itemname
     if request.method == 'POST':
         jsonpost=dict(request.json)
-        useras = _userpostget(g, jsonpost)
-        itemtype=_dictp('itemtype', jsonpost)
+        useras = userpostget(g, jsonpost)
+        itemtype=dictp('itemtype', jsonpost)
         itemspec={'name':itemname, 'itemtype':itemtype}
         #we use the fqpn to get the return to only get tags consistent with a certain library
-        fqpn = _dictp('fqpn',jsonpost)
+        fqpn = dictp('fqpn',jsonpost)
         #get the tag specs
-        tagspecs=_tagspecspostget(jsonpost)
+        tagspecs=tagspecspostget(jsonpost)
         return add_tags(g, useras, itemspec, tagspecs, fqpn)
     else:
         query=dict(request.args)
-        useras, usernick=_userget(g, query)
+        useras, usernick=userget(g, query)
 
-        sort = _sortget(query)
-        fqpn = _dictg('fqpn',query)
+        sort = sortget(query)
+        fqpn = dictg('fqpn',query)
         taggingsdict, taggingsthispostable, taggingsdefault= g.dbp.getTaggingsConsistentWithUserAndItems(g.currentuser, useras, [ifqin], sort, fqpn)
         return jsonify(fqpn=fqpn, taggings=taggingsdict, taggingtp=taggingsthispostable, taggingsdefault=taggingsdefault)
 
@@ -119,11 +119,11 @@ def tagsRemoveForItem(ns, itemname):
     ifqin=ns+"/"+itemname
     if request.method == 'POST':
         jsonpost=dict(request.json)
-        useras = _userpostget(g, jsonpost)
-        tagname=_dictp('tagname', jsonpost)
-        tagtype=_dictp('tagtype', jsonpost)
-        fqpn = _dictp('fqpn',jsonpost)
-        fqtn = _dictp('fqtn',jsonpost)
+        useras = userpostget(g, jsonpost)
+        tagname=dictp('tagname', jsonpost)
+        tagtype=dictp('tagtype', jsonpost)
+        fqpn = dictp('fqpn',jsonpost)
+        fqtn = dictp('fqtn',jsonpost)
         #will use useras for the namespace if it is removing your own stuff
         #for a library owner removing a tag 'viagra' the full fqtn is needed
         if fqtn==None:#nothing was sent over the wire
@@ -142,36 +142,36 @@ def tagsRemoveForItem(ns, itemname):
 def itemsEntryPoint():
     if request.method=='GET':
         query=dict(request.args)
-        op=_opget(query)
-        useras, _ = _userget(g, query)
+        op=opget(query)
+        useras, _ = userget(g, query)
         if op=="get_taggings":
-            sort = _sortget(query)
-            items = _itemsget(query)
+            sort = sortget(query)
+            items = itemsget(query)
             return get_taggings(g, useras, items, sort)
         elif op=="get_libraries":
-            sort = _sortget(query)
-            items = _itemsget(query)
+            sort = sortget(query)
+            items = itemsget(query)
             return get_postings(g, useras, items, sort)
         elif op=="get_libraries_and_taggings":
             itemsTaggingsAndPostings()
         else:#any other op or no op
-            sort = _sortget(query)
-            items = _itemsget(query)
+            sort = sortget(query)
+            items = itemsget(query)
             return get_postings(g, useras, items, sort)
     elif request.method=='POST':
         jsonpost=dict(request.json)
-        op=_oppostget('op')
-        useras = _userpostget(g, jsonpost)
+        op=oppostget('op')
+        useras = userpostget(g, jsonpost)
 
         if op=="add_libraries":
-            items = _itemspostget(jsonpost)
-            fqpo = _postablesget(jsonpost)
-            itemtype=_dictp('itemtype', jsonpost)
+            items = itemspostget(jsonpost)
+            fqpo = postablesget(jsonpost)
+            itemtype=dictp('itemtype', jsonpost)
             return add_postings(g, useras, items, fqpo, itemtype)
         elif op=="add_taggings":
-            items = _itemspostget(jsonpost)
-            tagspecs=_tagspecspostget(jsonpost)
-            itemtype=_dictp('itemtype', jsonpost)
+            items = itemspostget(jsonpost)
+            tagspecs=tagspecspostget(jsonpost)
+            itemtype=dictp('itemtype', jsonpost)
             return add_taggings(g, useras, items, tagspecs, itemtype)
         elif op=="get_libraries_and_taggings":
             itemsTaggingsAndPostings()
@@ -195,7 +195,7 @@ def add_taggings(g, useras, items, tagspecs, itemtype):
         if not tagspecs.has_key(name):
             doabort('BAD_REQ', "No itemname specified to tag")
         for ti in tagspecs[name]:
-            tagspec=_setupTagspec(ti, useras)
+            tagspec=setupTagspec(ti, useras)
             i,t,it,td=g.dbp.tagItem(g.currentuser, useras, i, tagspec)
             newtaggings.append(td)
     taggingsdict,_,junk=g.dbp.getTaggingsConsistentWithUserAndItems(g.currentuser, useras,
@@ -206,16 +206,16 @@ def add_taggings(g, useras, items, tagspecs, itemtype):
 def itemsTaggings():
     if request.method=='POST':
         jsonpost=dict(request.json)
-        useras = _userpostget(g, jsonpost)
-        items = _itemspostget(jsonpost)
-        tagspecs=_tagspecspostget(jsonpost)
-        itemtype=_dictp('itemtype', jsonpost)
+        useras = userpostget(g, jsonpost)
+        items = itemspostget(jsonpost)
+        tagspecs=tagspecspostget(jsonpost)
+        itemtype=dictp('itemtype', jsonpost)
         return add_taggings(g, useras, items, tagspecs, itemtype)
     else:
         query=dict(request.args)
-        useras, usernick=_userget(g, query)
-        sort = _sortget(query)
-        items = _itemsget(query)
+        useras, usernick=userget(g, query)
+        sort = sortget(query)
+        items = itemsget(query)
         return get_taggings(g, useras, items, sort)
 
 #POST: usedin postform to post items into a postable
@@ -242,16 +242,16 @@ def add_postings(g, useras, items, fqpo, itemtype):
 def itemsPostings():
     if request.method=='POST':
         jsonpost=dict(request.json)
-        useras = _userpostget(g, jsonpost)
-        items = _itemspostget(jsonpost)
-        fqpo = _postablesget(jsonpost)
-        itemtype=_dictp('itemtype', jsonpost)
+        useras = userpostget(g, jsonpost)
+        items = itemspostget(jsonpost)
+        fqpo = postablesget(jsonpost)
+        itemtype=dictp('itemtype', jsonpost)
         return add_postings(g, useras, items, fqpo, itemtype)
     else:
         query=dict(request.args)
-        useras, usernick=_userget(g, query)
-        sort = _sortget(query)
-        items = _itemsget(query)
+        useras, usernick=userget(g, query)
+        sort = sortget(query)
+        items = itemsget(query)
         return get_postings(g, useras, items, sort)
 
 #both POST and GET are used to get taggings and postings for a set of items
@@ -264,19 +264,19 @@ def itemsTaggingsAndPostings():
     if request.method=='POST':
         #"THIS WILL NOT BE TO POST STUFF IN BUT TO GET RESULTS"
         jsonpost=dict(request.json)
-        useras = _userpostget(g, jsonpost)
-        sort = _sortpostget(jsonpost)
-        items = _itemspostget(jsonpost)
-        fqpn = _dictp('fqpn',jsonpost)
+        useras = userpostget(g, jsonpost)
+        sort = sortpostget(jsonpost)
+        items = itemspostget(jsonpost)
+        fqpn = dictp('fqpn',jsonpost)
         postingsdict=g.dbp.getPostingsConsistentWithUserAndItems(g.currentuser, useras, items, sort)
         taggingsdict, taggingsthispostable, taggingsdefault=g.dbp.getTaggingsConsistentWithUserAndItems(g.currentuser, useras, items, sort, fqpn)
         return jsonify(fqpn=fqpn, postings=postingsdict, taggings=taggingsdict, taggingtp=taggingsthispostable, taggingsdefault=taggingsdefault)
     else:
         query=dict(request.args)
-        useras, usernick=_userget(g, query)
-        sort = _sortget(query)
-        items = _itemsget(query)
-        fqpn = _dictg('fqpn',query)
+        useras, usernick=userget(g, query)
+        sort = sortget(query)
+        items = itemsget(query)
+        fqpn = dictg('fqpn',query)
         postingsdict=g.dbp.getPostingsConsistentWithUserAndItems(g.currentuser, useras,
             items, sort)
         taggingsdict, taggingsthispostable, taggingsdefault=g.dbp.getTaggingsConsistentWithUserAndItems(g.currentuser, useras,
@@ -289,21 +289,21 @@ def itemsTaggingsAndPostings():
 def itemtypes():
     if request.method=='POST':
         jsonpost=dict(request.json)
-        useras = _userpostget(g, jsonpost)
+        useras = userpostget(g, jsonpost)
         itspec={}
         itspec['creator']=useras.basic.fqin
-        itspec['name'] = _dictp('name', jsonpost)
+        itspec['name'] = dictp('name', jsonpost)
         if not itspec['name']:
             doabort("BAD_REQ", "No name specified for itemtype")
-        itspec['postable'] = _dictp('postable', jsonpost)
+        itspec['postable'] = dictp('postable', jsonpost)
         if not itspec['postable']:
             doabort("BAD_REQ", "No postable specified for itemtype")
         newitemtype=g.dbp.addItemType(g.currentuser, useras, itspec)
         return jsonify({'status':'OK', 'info':newitemtype})
     else:
         query=dict(request.args)
-        useras, usernick=_userget(g, query)
-        criteria= _criteriaget(query)
+        useras, usernick=userget(g, query)
+        criteria= criteriaget(query)
         isitemtype=True
         count, thetypes=g.dbp.getTypesForQuery(g.currentuser, useras, criteria, usernick, isitemtype)
         return jsonify({'types':thetypes, 'count':count})
@@ -315,12 +315,12 @@ def tagtypes():
     #q={useras?, userthere?, sort?, pagetuple?, criteria?, stags|tagnames ?, postables?}
     if request.method=='POST':
         jsonpost=dict(request.json)
-        useras = _userpostget(g, jsonpost)
+        useras = userpostget(g, jsonpost)
         itspec={}
         itspec['creator']=useras.basic.fqin
-        itspec['name'] = _dictp('name', jsonpost)
-        itspec['tagmode'] = _dictp('tagmode', jsonpost)
-        itspec['singletonmode'] = _dictp('singletonmode',jsonpost)
+        itspec['name'] = dictp('name', jsonpost)
+        itspec['tagmode'] = dictp('tagmode', jsonpost)
+        itspec['singletonmode'] = dictp('singletonmode',jsonpost)
         if not itspec['tagmode']:
             del itspec['tagmode']
         else:
@@ -331,15 +331,15 @@ def tagtypes():
             itspec['singletonmode']=bool(itspec['singletonmode'])
         if not itspec['name']:
             doabort("BAD_REQ", "No name specified for itemtype")
-        itspec['postable'] = _dictp('postable', jsonpost)
+        itspec['postable'] = dictp('postable', jsonpost)
         if not itspec['postable']:
             doabort("BAD_REQ", "No postable specified for itemtype")
         newtagtype=g.dbp.addTagType(g.currentuser, useras, itspec)
         return jsonify({'status':'OK', 'info':newtagtype})
     else:
         query=dict(request.args)
-        useras, usernick=_userget(g, query)
-        criteria= _criteriaget(query)
+        useras, usernick=userget(g, query)
+        criteria= criteriaget(query)
         isitemtype=False
         count, thetypes=g.dbp.getTypesForQuery(g.currentuser, useras, criteria, usernick, isitemtype)
         return jsonify({'types':thetypes, 'count':count})

@@ -23,11 +23,11 @@ def create_or_delete_Library():
         doabort("BAD_REQ", "GET not supported")
 
 @adsgut.route('/libraryN/<libraryowner>/library:<libraryname>')
-def libraryEntryPoint(groupowner, groupname):
+def libraryEntryPoint(libraryowner, libraryname):
     if request.method=='GET':
         query=dict(request.args)
-        op=_opget(query)
-        useras, usernick = _userget(g, query)
+        op= opget(query)
+        useras, usernick = userget(g, query)
         lib, io, rw, on, cn = membable(g, useras, libraryowner, libraryname, "library")
         if op=="get_members":
             membersdict=getMembersOfMembable(g, useras, lib.basic.fqin)
@@ -36,67 +36,67 @@ def libraryEntryPoint(groupowner, groupname):
             invitedsdict=getInvitedsForMembable(g, useras, lib.basic.fqin)
             return jsonify(invitedsdict)
         elif op=='get_tags':
-            criteria= _criteriaget(query)
-            q=_queryget(query)
+            criteria= criteriaget(query)
+            q= queryget(query)
             return get_tags(g, useras, usernick, lib.basic.fqin, q, criteria)
         elif op=='get_items':
-            format = _dictg('format', query)
-            sort = _sortget(query)
-            pagtuple = _pagtupleget(query)
-            criteria= _criteriaget(query)
-            q=_queryget(query)
-            return get_items(g, useras, usernick, format, q, criteria, pagtuple, sort)
+            format = dictg('format', query)
+            sort = sortget(query)
+            pagtuple = pagtupleget(query)
+            criteria= criteriaget(query)
+            q= queryget(query)
+            return get_items(g, useras, usernick, lib.basic.fqin, format, q, criteria, pagtuple, sort)
         else:#any other op or no op
             return jsonify(library=lib, oname = on, cname = cn, io=io, rw=rw)
     elif request.method=='POST':
         jsonpost=dict(request.json)
-        op=_oppostget('op')
-        useras = _userpostget(g, jsonpost)
+        op= oppostget('op')
+        useras = userpostget(g, jsonpost)
         lib, io, rw, on, cn = membable(g, useras, libraryowner, libraryname, "library")
         if op=="remove_items":
-            items = _itemspostget(jsonpost)
+            items = itemspostget(jsonpost)
             return remove_items(g, useras, items, lib.basic.fqin)
         elif op=="add_items":
-            itemtype=_dictp('itemtype', jsonpost)
-            items = _itemspostget(jsonpost)
+            itemtype= dictp('itemtype', jsonpost)
+            items = itemspostget(jsonpost)
             return add_items(g, useras, items, lib.basic.fqin)
         elif op=="save_items":
-            items = _itemspostget(jsonpost)
-            itemtype = _dictp('itemtype', jsonpost)
+            items = itemspostget(jsonpost)
+            itemtype = dictp('itemtype', jsonpost)
             return save_items(g, useras, items, itemtype)
         elif op=="remove_member":
-            member = _dictp('member', jsonpost)
+            member = dictp('member', jsonpost)
             return removeMember(useras, lib.basic.fqin, member)
         elif op=="add_member":
-            member=_dictp('member', jsonpost)
-            changerw=_dictp('changerw', jsonpost)
+            member= dictp('member', jsonpost)
+            changerw= dictp('changerw', jsonpost)
             if not changerw:
                 changerw=False
             return addMember(useras, lib.basic.fqin, member)
         elif op=="accept_invitation":
-            adsid=_dictp('memberable', jsonpost)
+            adsid= dictp('memberable', jsonpost)
             memberable=g.db._getUserForAdsid(g.currentuser, adsid)
             me, lib=g.db.acceptInviteToMembable(g.currentuser, lib.basic.fqin, memberable)
             return jsonify({'status':'OK', 'info': {'invited':me.nick, 'to': grp.basic.fqin, 'accepted':True}})
         elif op=="add_invitation":
-            changerw=_dictp('changerw', jsonpost)
+            changerw= dictp('changerw', jsonpost)
             if changerw==None:
                 changerw=False
-            adsid=_dictp('memberable', jsonpost)
+            adsid= dictp('memberable', jsonpost)
             return inviteToLibrary(useras, adsid, lib.basic.fqin, changerw)
         elif op=="change_description":
-            description=_dictp('description', jsonpost,'')
+            description= dictp('description', jsonpost,'')
             me, lib = g.db.changeDescriptionOfMembable(g.currentuser, useras, lib.basic.fqin, description)
             return jsonify({'status': 'OK', 'info': {'user':useras.nick, 'for': lib.basic.fqin}})
         elif op=="change_permissions":#could even be a group, for user also want fqin
             #change to take nick
-            memberable=_dictp('memberable', jsonpost)
+            memberable= dictp('memberable', jsonpost)
             mtype=gettype(memberable)
             memberable=g.db._getMemberableForFqin(g.currentuser, mtype, memberable)
             memberable, lib = g.db.toggleRWForMembership(g.currentuser, useras, lib.basic.fqin, memberable)
             return jsonify({'status': 'OK', 'info': {'memberable':memberable.basic.fqin, 'for': lib.basic.fqin}})
         elif op=="change_ownership":
-            adsid=_dictp('memberable', jsonpost)
+            adsid= dictp('memberable', jsonpost)
             memberable=g.db._getUserForAdsid(g.currentuser, adsid)
             newo, lib=g.db.changeOwnershipOfMembable(g.currentuser, useras, lib.basic.fqin, memberable)
             return jsonify({'status': 'OK', 'info': {'changedto':newo.nick, 'for': lib.basic.fqin}})
@@ -142,15 +142,15 @@ def doPostableChanges(po, pt, pn):
     fqpn=po+"/"+pt+":"+pn
     if request.method == 'POST':
         jsonpost=dict(request.json)
-        memberable=_dictp('memberable', jsonpost)
-        changerw=_dictp('changerw', jsonpost)
+        memberable= dictp('memberable', jsonpost)
+        changerw= dictp('changerw', jsonpost)
         if changerw==None:
             changerw=False
         #for inviting this is adsid(email) of user invited.
         #for accepting this is your own email(adsid)
         if not memberable:
             doabort("BAD_REQ", "No User Specified")
-        op=_dictp('op', jsonpost)
+        op= dictp('op', jsonpost)
         if not op:
             doabort("BAD_REQ", "No Op Specified")
         if op=="invite":
@@ -195,7 +195,7 @@ def doPostableChanges(po, pt, pn):
             mem, p = g.db.toggleRWForMembership(g.currentuser, g.currentuser, fqpn, memberable)
             return jsonify({'status': 'OK', 'info': {'user':memberable, 'for': fqpn}})
         elif op=='description':
-            description=_dictp('description', jsonpost,'')
+            description= dictp('description', jsonpost,'')
             mem, p = g.db.changeDescriptionOfMembable(g.currentuser, g.currentuser, fqpn, description)
             return jsonify({'status': 'OK', 'info': {'user':memberable, 'for': fqpn}})
         else:
@@ -247,7 +247,7 @@ def addMemberToPostable_or_postableMembers(po, pt, pn):
 @adsgut.route('/library/<libraryowner>/library:<libraryname>')
 def libraryInfo(libraryowner, libraryname):
     query=dict(request.args)
-    useras, _ = _userget(g, query)
+    useras, _ = userget(g, query)
     l, io, rw, on, cn = membable(g, useras, libraryowner, libraryname, "library")
     return jsonify(library=l, oname=on, cname=cn, io=io, rw=rw)
 
@@ -300,24 +300,24 @@ def get_items(g, useras, usernick, fqpn, format, q, criteria, pagtuple, sort):
 def itemsForPostable(po, pt, pn):
     if request.method=='POST':
         jsonpost=dict(request.json)
-        useras = _userpostget(g, jsonpost)
+        useras = userpostget(g, jsonpost)
         #get a list of 'names'(bibcodes) for the itemtype (pubs)
-        items = _itemspostget(jsonpost)
+        items = itemspostget(jsonpost)
         #also get the itemtypr
-        itemtype=_dictp('itemtype', jsonpost)
+        itemtype= dictp('itemtype', jsonpost)
         fqpn=po+"/"+pt+":"+pn
         return add_items(g, useras, items, fqpn)
     else:
         query=dict(request.args)
-        useras, usernick=_userget(g, query)
+        useras, usernick= userget(g, query)
         #get user, sort, and pagetuple. with user, also get if u only want that user's posts
         #otheerwise the useras is used to make sure the user has the righ permissions
-        sort = _sortget(query)
-        pagtuple = _pagtupleget(query)
+        sort = sortget(query)
+        pagtuple = pagtupleget(query)
         #criteria is used for further filtering (currently not used)
-        criteria= _criteriaget(query)
+        criteria= criteriaget(query)
         postable= po+"/"+pt+":"+pn
-        q=_queryget(query)
+        q= queryget(query)
         #Add the postable wanted to the query. The query q is used to get
         #tagtypes and tagnames if wanted
         return get_items(g, useras, usernick, fqpn, None, q, criteria, pagtuple, sort)
@@ -328,13 +328,13 @@ def itemsForPostable(po, pt, pn):
 @adsgut.route('/postable/<po>/<pt>:<pn>/json', methods=['GET'])
 def jsonItemsForPostable(po, pt, pn):
     query=dict(request.args)
-    useras, usernick=_userget(g, query)
+    useras, usernick= userget(g, query)
 
-    sort = _sortget(query)
-    pagtuple = _pagtupleget(query)
-    criteria= _criteriaget(query)
+    sort = sortget(query)
+    pagtuple = pagtupleget(query)
+    criteria= criteriaget(query)
     postable= po+"/"+pt+":"+pn
-    q=_queryget(query)
+    q= queryget(query)
     return get_items(g, useras, usernick, fqpn, 'json', q, criteria, pagtuple, sort)
 
 
@@ -342,13 +342,13 @@ def jsonItemsForPostable(po, pt, pn):
 @adsgut.route('/postable/<po>/<pt>:<pn>/csv', methods=['GET'])
 def csvItemsForPostable(po, pt, pn):
     query=dict(request.args)
-    useras, usernick=_userget(g, query)
-    sort = _sortget(query)
-    pagtuple = _pagtupleget(query)
+    useras, usernick= userget(g, query)
+    sort = sortget(query)
+    pagtuple = pagtupleget(query)
     #pagtuple=(2,1)
-    criteria= _criteriaget(query)
+    criteria= criteriaget(query)
     postable= po+"/"+pt+":"+pn
-    q=_queryget(query)
+    q= queryget(query)
     return get_items(g, useras, usernick, fqpn, 'csv', q, criteria, pagtuple, sort)
 
 
@@ -367,8 +367,8 @@ def libraryItems(libraryowner, libraryname):
 def taggingsForPostable(po, pt, pn):
     if request.method=='POST':
         jsonpost=dict(request.json)
-        useras = _userpostget(g, jsonpost)
-        itemsandtags = _itemstagspostget(jsonpost)
+        useras = userpostget(g, jsonpost)
+        itemsandtags = itemstagspostget(jsonpost)
         fqpn=po+"/"+pt+":"+pn
         tds=[]
         for d in itemsandtags:
@@ -381,13 +381,13 @@ def taggingsForPostable(po, pt, pn):
         return jsonify(itemtaggings)
     else:
         query=dict(request.args)
-        useras, usernick=_userget(g, query)
+        useras, usernick= userget(g, query)
 
         #need to pop the other things like pagetuples etc. Helper funcs needed
-        sort = _sortget(query)
-        criteria= _criteriaget(query)
+        sort = sortget(query)
+        criteria= criteriaget(query)
         postable= po+"/"+pt+":"+pn
-        q=_queryget(query)
+        q= queryget(query)
         if not q.has_key('postables'):
             q['postables']=[]
         q['postables'].append(postable)
@@ -400,13 +400,15 @@ def taggingsForPostable(po, pt, pn):
 #this is a workhorse function which populates the lhs set of tags
 
 def get_tags(g, useras, usernick, fqpn, q, criteria):
+    pt, pn=fqpn.split('/')[-1].split(':')
     if not q.has_key('postables'):
         q['postables']=[]
+    #BUG: this seems identical. Whats wrong?
     if pt=='library' and pn=='default':#in saved items get from all postables(libraries) we are in
         #i believe this is currently done in the downstream function
-        q['postables'].append(postable)
+        q['postables'].append(fqpn)
     else:
-        q['postables'].append(postable)
+        q['postables'].append(fqpn)
 
     count, tags=g.dbp.getTagsForQueryFromPostingDocs(g.currentuser, useras,
         q, usernick, criteria)
@@ -415,13 +417,13 @@ def get_tags(g, useras, usernick, fqpn, q, criteria):
 @adsgut.route('/postable/<po>/<pt>:<pn>/tags', methods=['GET'])
 def tagsForPostable(po, pt, pn):
     query=dict(request.args)
-    useras, usernick=_userget(g, query)
+    useras, usernick= userget(g, query)
     #criteria currently unused
-    criteria= _criteriaget(query)
+    criteria= criteriaget(query)
     postable= po+"/"+pt+":"+pn
     #tagnames and tagtypes used in query to get only those tags compatible with the tag used
     #this is used for filtering in the user interface
-    q=_queryget(query)
+    q= queryget(query)
     return get_tags(g, useras, usernick, fqpn, q, criteria)
     
 
@@ -439,9 +441,9 @@ def remove_items(g, useras, items, fqpn):
 def itemsremove():
     if request.method=='POST':
         jsonpost=dict(request.json)
-        fqpn = _dictp('fqpn', jsonpost)
-        useras = _userpostget(g, jsonpost)
-        items = _itemspostget(jsonpost)
+        fqpn = dictp('fqpn', jsonpost)
+        useras = userpostget(g, jsonpost)
+        items = itemspostget(jsonpost)
         return remove_items(g, useras, items, fqpn)
         
 
@@ -464,17 +466,17 @@ def items():
     #q={useras?, userthere?, sort?, pagetuple?, criteria?, stags|tagnames ?, postables?}
     if request.method=='POST':
         jsonpost=dict(request.json)
-        useras = _userpostget(g, jsonpost)
-        items = _itemspostget(jsonpost)
-        itemtype = _dictp('itemtype', jsonpost)
+        useras = userpostget(g, jsonpost)
+        items = itemspostget(jsonpost)
+        itemtype = dictp('itemtype', jsonpost)
         return save_items(g, useras, items, itemtype)
     else:
         query=dict(request.args)
-        useras, usernick=_userget(g, query)
+        useras, usernick= userget(g, query)
         #query stuff
-        sort = _sortget(query)
-        pagtuple = _pagtupleget(query)
-        criteria= _criteriaget(query)
+        sort = sortget(query)
+        pagtuple = pagtupleget(query)
+        criteria= criteriaget(query)
         #By this time query is popped down
         count, items=g.dbp.getItemsForQuery(g.currentuser, useras,
             query, usernick, criteria, sort, pagtuple)

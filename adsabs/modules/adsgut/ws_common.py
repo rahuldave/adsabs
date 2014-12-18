@@ -98,9 +98,9 @@ def jsonify(*args, **kwargs):
 #This next set of functions is used to obtain various quantities
 #from http request GET and POST dictionaries in flask.
 
-global _dictg
+global dictg
 #FOR GET
-def _dictg(k,d, listmode=False):
+def dictg(k,d, listmode=False):
     val=d.get(k, [None])
     if d.has_key(k):
         d.pop(k)
@@ -109,28 +109,28 @@ def _dictg(k,d, listmode=False):
     else:
         return val[0]
 
-global _dictp
+global dictp
 #FOR POST
-def _dictp(k,d, default=None):
+def dictp(k,d, default=None):
     val=d.get(k, default)
     if d.has_key(k):
         d.pop(k)
     return val
 
 global _opppostget
-def _oppostget(postdict):
-    op = _dictp('op', postdict)
+def oppostget(postdict):
+    op = dictp('op', postdict)
     return op
 
 global _opget
-def _opget(qdict):
-    op=_dictg('op', qdict)
+def opget(qdict):
+    op=dictg('op', qdict)
     return op
 
 global _userpostget
 #gets a user from key useras in a POST request
-def _userpostget(g, postdict):
-    nick=_dictp('useras', postdict)
+def userpostget(g, postdict):
+    nick=dictp('useras', postdict)
     if nick:
         useras=g.db._getUserForNick(g.currentuser, nick)
     else:
@@ -140,9 +140,9 @@ def _userpostget(g, postdict):
 global _userget
 #gets a user from key useras in a GET request
 #userthere is used incase you want items just pertinent to the user
-def _userget(g, qdict):
-    nick=_dictg('useras', qdict)
-    userthere=_dictg('userthere', qdict)
+def userget(g, qdict):
+    nick=dictg('useras', qdict)
+    userthere=dictg('userthere', qdict)
     if nick:
         useras=g.db._getUserForNick(g.currentuser, nick)
     else:
@@ -158,9 +158,9 @@ def _userget(g, qdict):
 #exposing the inners of the database. it would be better to use a table
 #to map this to user friendly names. TODO.
 global _sortget
-def _sortget(qdict):
+def sortget(qdict):
     #a serialixed dict of ascending and field
-    sortstring=_dictg('sort', qdict)
+    sortstring=dictg('sort', qdict)
     if not sortstring:
         return {'field':'posting__whenposted', 'ascending':False}
     sort={}
@@ -170,9 +170,9 @@ def _sortget(qdict):
 
 #sortspec from POST
 global _sortpostget
-def _sortpostget(qdict):
+def sortpostget(qdict):
     #a serialixed dict of ascending and field
-    sortstring=_dictp('sort', qdict)
+    sortstring=dictp('sort', qdict)
     if not sortstring:
         return {'field':'posting__whenposted', 'ascending':False}
     sort={}
@@ -184,8 +184,8 @@ def _sortpostget(qdict):
 #eg criteria=basic__fqin:eq:something&criteria=
 #we create from it a criteria list of dicts
 global _criteriaget
-def _criteriaget(qdict):
-    critlist=_dictg('criteria', qdict, True)
+def criteriaget(qdict):
+    critlist=dictg('criteria', qdict, True)
     if not critlist[0]:
         return False
     crit=[]
@@ -198,8 +198,8 @@ def _criteriaget(qdict):
 #a serialised dict of arbitrary keys, with mongo style encoding
 #operators are not represented here.(equality is assumed)
 global _queryget
-def _queryget(qdict):
-    querylist=_dictg('query', qdict, True)
+def queryget(qdict):
+    querylist=dictg('query', qdict, True)
     if not querylist[0]:
         return {}
     q={}
@@ -213,8 +213,8 @@ def _queryget(qdict):
 #this is for pagination in the form pagetuplle=15:30
 #the first is the item number to start from(offset), the second is the pagestyle.
 global _pagetupleget
-def _pagtupleget(qdict):
-    pagtuplestring=_dictg('pagtuple', qdict)
+def pagtupleget(qdict):
+    pagtuplestring=dictg('pagtuple', qdict)
     if not pagtuplestring:
         return None
     plist=pagtuplestring.split(':')
@@ -223,32 +223,32 @@ def _pagtupleget(qdict):
 
 #gets a list of items using their fqins
 global _itemsget
-def _itemsget(qdict):
-    itemlist=_dictg('items', qdict, True)
+def itemsget(qdict):
+    itemlist=dictg('items', qdict, True)
     if not itemlist[0]:
         return []
     return itemlist
 
 #like above, but uses post
 global _itemspostget
-def _itemspostget(qdict):
-    itemlist=_dictp('items', qdict)
+def itemspostget(qdict):
+    itemlist=dictp('items', qdict)
     if not itemlist:
         return []
     return itemlist
 
 #gets bibcodes from POST
 global _bibcodespostget
-def _bibcodespostget(qdict):
-    itemlist=_dictp('bibcode', qdict)
+def bibcodespostget(qdict):
+    itemlist=dictp('bibcode', qdict)
     if not itemlist:
         return []
     return itemlist
 
 #gets a list of libraries (using their fqpns)
 global _postablesget
-def _postablesget(qdict):
-    plist=_dictp('postables', qdict)
+def postablesget(qdict):
+    plist=dictp('postables', qdict)
     if not plist:
         return []
     return plist
@@ -256,8 +256,8 @@ def _postablesget(qdict):
 #get items and tags from the POST
 #format is BLA
 global _itemstagspostget
-def _itemstagspostget(qdict):
-    itemstagslist=_dictp('itemsandtags', qdict)
+def itemstagspostget(qdict):
+    itemstagslist=dictp('itemsandtags', qdict)
     if not itemstagslist:
         return []
     return itemstagslist
@@ -266,8 +266,8 @@ def _itemstagspostget(qdict):
 #get tag specs from the POST
 #format is BLA
 global _tagspecspostget
-def _tagspecspostget(qdict):
-    tagspecs=_dictp('tagspecs', qdict)
+def tagspecspostget(qdict):
+    tagspecs=dictp('tagspecs', qdict)
     if not tagspecs:
         return {}
     return tagspecs
@@ -275,7 +275,7 @@ def _tagspecspostget(qdict):
 
 #sets up the tag spec to tag an item
 global _setupTagspec
-def _setupTagspec(ti, useras):
+def setupTagspec(ti, useras):
     #atleast one of name or content must be there (tag or note)
     if not (ti.has_key('name') or ti.has_key('content')):
         doabort('BAD_REQ', "No name or content specified for tag")
@@ -360,12 +360,12 @@ def createMembable(g, request, ptstr):
     spec={}
     jsonpost=dict(request.json)
     #get user and name from POST json
-    useras=_userpostget(g,jsonpost)
-    name=_dictp('name', jsonpost)
+    useras=userpostget(g,jsonpost)
+    name=dictp('name', jsonpost)
     if not name:
         doabort("BAD_REQ", "No Name Specified")
     #get description from POST
-    description=_dictp('description', jsonpost, '')
+    description=dictp('description', jsonpost, '')
     spec['creator']=useras.basic.fqin
     spec['name']=name
     spec['description']=description
@@ -374,8 +374,8 @@ def createMembable(g, request, ptstr):
 
 def deleteMembable(g, request):
     jsonpost=dict(request.json)
-    fqpn = _dictp('fqpn', jsonpost)
-    useras = _userpostget(g, jsonpost)
+    fqpn = dictp('fqpn', jsonpost)
+    useras = userpostget(g, jsonpost)
     if fqpn is None:
         doabort("BAD_REQ", "No membable specified for  removal")
     g.dbp.removeMembable(g.currentuser, useras, fqpn)
@@ -406,8 +406,8 @@ def getInvitedsForMembable(g, useras, fqpn):
 #mainly we do not want to leak info about other inviteds
 #return information about the group or library. the world postable is a misnomer for now.
 #this is a common function used in the web services below
-def membable(g, useras, ownernick, name, ptstr):
-    fqpn=ownernick+"/"+ptstr+":"+name
+def membable(g, useras, ownernick, name, pstr):
+    fqpn=ownernick+"/"+pstr+":"+name
     membable, owner, creator=g.db.getMembableInfo(g.currentuser, useras, fqpn)
     isowner=False
     if g.db.isOwnerOfMembable(g.currentuser, useras, membable):
@@ -493,7 +493,7 @@ def perform_solr_bigquery(bibcodes):
 def get_bigquery_solr():
     if request.method=='POST':
         jsonpost=dict(request.json)
-        bibcodes = _bibcodespostget(jsonpost)
+        bibcodes = bibcodespostget(jsonpost)
         d=perform_solr_bigquery(bibcodes)
         return jsonify(d)
 
@@ -511,9 +511,9 @@ def removeMember(useras, fqpn, member):
 def memberremove():#useras/member/gqpn
     if request.method=='POST':
         jsonpost=dict(request.json)
-        fqpn = _dictp('fqpn', jsonpost)
-        useras = _userpostget(g, jsonpost)
-        member = _dictp('member', jsonpost)
+        fqpn = dictp('fqpn', jsonpost)
+        useras = userpostget(g, jsonpost)
+        member = dictp('member', jsonpost)
         return removeMember(useras, fqpn, member)
 
 

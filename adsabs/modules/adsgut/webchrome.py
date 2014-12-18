@@ -121,7 +121,7 @@ def libraryProfileHtml(libraryowner, libraryname):
 
 #general function used above which gets the right flask-wtf form for recaptcha for invitations
 def profileHtmlNotRouted(powner, pname, ptype, inviteform=None):
-    p, owner, rw, on, cn=postable(powner, pname, ptype)
+    p, owner, rw, on, cn=membable(g, g.currentuser, powner, pname, ptype)
     if not inviteform:
       if ptype=="library":
         inviteform = InviteForm()
@@ -135,7 +135,7 @@ def profileHtmlNotRouted(powner, pname, ptype, inviteform=None):
 @adsgut.route('/postable/<po>/<pt>:<pn>/filter/html')
 def postableFilterHtml(po, pt, pn):
     querystring=request.query_string
-    p, owner, rw, on, cn=postable(po, pn, pt)
+    p, owner, rw, on, cn=membable(g, g.currentuser, po, pn, pt)
     pflavor='pos'
     if pn=='public' and po=='adsgut' and pt=='library':
         pflavor='pub'
