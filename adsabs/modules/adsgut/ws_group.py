@@ -16,6 +16,8 @@ from ws_common import *
 @adsgut.route('/group', methods=['POST'])#groupname/[description]/[useras]
 def create_or_delete_Group():
     if request.method == 'POST':
+        jsonpost=dict(request.json)
+        op= oppostget(jsonpost)
         if op=="create_group" or op==None:
             newgroup=createMembable(g, request, "group")
             return jsonify(postable=newgroup)
@@ -43,9 +45,42 @@ def create_or_delete_Group():
 
 
 #TODO: if i am member of group, should I see inviteds, etc? Tamp the security down
-@adsgut.route('/groupN/<groupowner>/group:<groupname>')
+@adsgut.route('/groupN/<groupowner>/group:<groupname>', methods=['POST', 'GET'])
 def groupEntryPoint(groupowner, groupname):
-    if request.method=='GET':
+    if request.method=='POST':
+        jsonpost=dict(request.json)
+        op= oppostget(jsonpost)
+        useras = userpostget(g, jsonpost)
+        grp, io, rw, on, cn = membable(g, useras, groupowner, groupname, "group")
+        if op=="remove_member":#UT
+            member = dictp('member', jsonpost)
+            return removeMember(useras, grp.basic.fqin, member)
+        elif op=="accept_invitation":#UT
+            adsid= dictp('memberable', jsonpost)
+            memberable=g.db._getUserForAdsid(g.currentuser, adsid)
+            me, grp=g.db.acceptInviteToMembable(g.currentuser, grp.basic.fqin, memberable)
+            return jsonify({'status':'OK', 'info': {'invited':me.nick, 'to': grp.basic.fqin, 'accepted':True}})
+        elif op=="add_invitation":
+            adsid= dictp('memberable', jsonpost)
+            return inviteToGroup(useras, adsid, grp.basic.fqin)
+        elif op=="change_description":
+            description= dictp('description', jsonpost,'')
+            me, grp = g.db.changeDescriptionOfMembable(g.currentuser, useras, grp.basic.fqin, description)
+            return jsonify({'status': 'OK', 'info': {'user':useras.nick, 'for': grp.basic.fqin}})
+        elif op=="change_ownership":#UT
+            adsid= dictp('memberable', jsonpost)
+            memberable=g.db._getUserForAdsid(g.currentuser, adsid)
+            newo, grp=g.db.changeOwnershipOfMembable(g.currentuser, useras, grp.basic.fqin, memberable)
+            return jsonify({'status': 'OK', 'info': {'changedto':newo.nick, 'for': grp.basic.fqin}})
+        elif op=="get_members":
+            membersdict=getMembersOfMembable(g, useras, grp.basic.fqin)
+            return jsonify(membersdict)
+        elif op=="get_invitations":
+            invitedsdict=getInvitedsForMembable(g, useras, grp.basic.fqin)
+            return jsonify(invitedsdict)
+        else:#send an empty POST
+            return jsonify(group=grp, oname = on, cname = cn, io=io, rw=rw)
+    elif request.method=='GET':
         query=dict(request.args)
         op= opget(query)
         useras, _ = userget(g, query)
@@ -58,39 +93,6 @@ def groupEntryPoint(groupowner, groupname):
             invitedsdict=getInvitedsForMembable(g, useras, grp.basic.fqin)
             return jsonify(invitedsdict)
         else:#any other op or no op
-            return jsonify(group=grp, oname = on, cname = cn, io=io, rw=rw)
-    elif request.method=='POST':
-        jsonpost=dict(request.json)
-        op= oppostget('op')
-        useras = userpostget(g, jsonpost)
-        grp, io, rw, on, cn = membable(g, useras, groupowner, groupname, "group")
-        if op=="remove_member":
-            member = dictp('member', jsonpost)
-            return removeMember(useras, grp.basic.fqin, member)
-        elif op=="accept_invitation":
-            adsid= dictp('memberable', jsonpost)
-            memberable=g.db._getUserForAdsid(g.currentuser, adsid)
-            me, grp=g.db.acceptInviteToMembable(g.currentuser, grp.basic.fqin, memberable)
-            return jsonify({'status':'OK', 'info': {'invited':me.nick, 'to': grp.basic.fqin, 'accepted':True}})
-        elif op=="add_invitation":
-            adsid= dictp('memberable', jsonpost)
-            return inviteToGroup(useras, adsid, grp.basic.fqin)
-        elif op=="change_description":
-            description= dictp('description', jsonpost,'')
-            me, grp = g.db.changeDescriptionOfMembable(g.currentuser, useras, grp.basic.fqin, description)
-            return jsonify({'status': 'OK', 'info': {'user':useras.nick, 'for': grp.basic.fqin}})
-        elif op=="change_ownership":
-            adsid= dictp('memberable', jsonpost)
-            memberable=g.db._getUserForAdsid(g.currentuser, adsid)
-            newo, grp=g.db.changeOwnershipOfMembable(g.currentuser, useras, grp.basic.fqin, memberable)
-            return jsonify({'status': 'OK', 'info': {'changedto':newo.nick, 'for': grp.basic.fqin}})
-        elif op=="get_members":
-            membersdict=getMembersOfMembable(g, useras, grp.basic.fqin)
-            return jsonify(membersdict)
-        elif op=="get_invitations":
-            invitedsdict=getInvitedsForMembable(g, useras, grp.basic.fqin)
-            return jsonify(invitedsdict)
-        else:#send an empty POST
             return jsonify(group=grp, oname = on, cname = cn, io=io, rw=rw)
 
 GRPINVSTRING="""

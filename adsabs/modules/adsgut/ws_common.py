@@ -30,6 +30,9 @@ from adsabs.extensions import solr
 
 from config import config
 
+from adsabs.modules.user.user import AdsUser
+from adsabs.modules.user.user import send_email_to_user
+
 adsgut_blueprint = Blueprint('adsgut', __name__,
                             template_folder="templates",
                             static_folder='static',
@@ -388,6 +391,7 @@ def addMemberToMembable(g, useras, member, fqpn, changerw):#fqmn/[changerw]
     user, membable=g.db.addMemberableToMembable(g.currentuser, useras, fqpn, member, changerw)
     return user, membable
 
+#Dont we want an ownermode for security in here? BUG
 def getMembersOfMembable(g, useras, fqpn):
     users=g.db.membersOfMembableFromFqin(g.currentuser,useras,fqpn)
     userdict={'users':users}

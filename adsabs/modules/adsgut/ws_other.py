@@ -37,7 +37,7 @@ def tags():
         return jsonify({'tags':tags, 'count':count})
 
 
-@adsgut.route('/itemsN/<ns>/<itemname>')
+@adsgut.route('/itemsN/<ns>/<itemname>', methods=['POST', 'GET'])
 def itemEntryPoint(na, itemname):
     ifqin=ns+"/"+itemname
     if request.method=='GET':
@@ -59,7 +59,7 @@ def itemEntryPoint(na, itemname):
             return get_postings(g, useras, items, sort)
     elif request.method=='POST':
         jsonpost=dict(request.json)
-        op=oppostget('op')
+        op=oppostget(jsonpost)
         useras = userpostget(g, jsonpost)
 
         if op=="remove_tag":
@@ -160,7 +160,7 @@ def itemsEntryPoint():
             return get_postings(g, useras, items, sort)
     elif request.method=='POST':
         jsonpost=dict(request.json)
-        op=oppostget('op')
+        op=oppostget(jsonpost)
         useras = userpostget(g, jsonpost)
 
         if op=="add_libraries":

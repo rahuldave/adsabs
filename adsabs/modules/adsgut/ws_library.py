@@ -11,6 +11,8 @@ def createLibrary():
 @adsgut.route('/library', methods=['POST'])#libraryname/[description]/[useras]
 def create_or_delete_Library():
     if request.method == 'POST':
+        jsonpost=dict(request.json)
+        op= oppostget(jsonpost)
         if op=="create_library" or op==None:
             newgroup=createMembable(g, request, "library")
             return jsonify(postable=newgroup)
@@ -22,7 +24,7 @@ def create_or_delete_Library():
     else:
         doabort("BAD_REQ", "GET not supported")
 
-@adsgut.route('/libraryN/<libraryowner>/library:<libraryname>')
+@adsgut.route('/libraryN/<libraryowner>/library:<libraryname>', methods=['POST', 'GET'])
 def libraryEntryPoint(libraryowner, libraryname):
     if request.method=='GET':
         query=dict(request.args)
@@ -50,7 +52,7 @@ def libraryEntryPoint(libraryowner, libraryname):
             return jsonify(library=lib, oname = on, cname = cn, io=io, rw=rw)
     elif request.method=='POST':
         jsonpost=dict(request.json)
-        op= oppostget('op')
+        op= oppostget(jsonpost)
         useras = userpostget(g, jsonpost)
         lib, io, rw, on, cn = membable(g, useras, libraryowner, libraryname, "library")
         if op=="remove_items":
@@ -72,7 +74,7 @@ def libraryEntryPoint(libraryowner, libraryname):
             changerw= dictp('changerw', jsonpost)
             if not changerw:
                 changerw=False
-            return addMember(useras, lib.basic.fqin, member)
+            return addMemberToLibrary(g, useras, lib.basic.fqin, member, changerw)
         elif op=="accept_invitation":
             adsid= dictp('memberable', jsonpost)
             memberable=g.db._getUserForAdsid(g.currentuser, adsid)
@@ -205,6 +207,9 @@ def doPostableChanges(po, pt, pn):
 
 
 
+def addMemberToLibrary(g, useras, fqln, member, changerw):
+    member, library =  addMemberToMembable(g, useras, member, fqln, changerw)
+    return jsonify({'status':'OK', 'info': {'member':member.basic.fqin, 'type':'library', 'postable':library.basic.fqin}})
 
 
 
@@ -220,11 +225,18 @@ def libraryInviteds(libraryowner, libraryname):
 def addMemberToLibrary_or_libraryMembers(libraryowner, libraryname):
     #add permit to match user with groupowner
     fqln=libraryowner+"/library:"+libraryname
+    
     if request.method == 'POST':
-        member, library=addMemberToPostable(g, request, fqln)
-        return jsonify({'status':'OK', 'info': {'member':member.basic.fqin, 'type':'library', 'postable':library.basic.fqin}})
+        jsonpost=dict(request.json)
+        useras = userpostget(g, jsonpost)
+        member= dictp('member', jsonpost)
+        changerw= dictp('changerw', jsonpost)
+        return addMemberToLibrary(g, useras, fqln, member, changerw)
     else:
-        userdict=getMembersOfMembable(g, request, fqln)
+        query=dict(request.args)
+        op= opget(query)
+        useras, usernick = userget(g, query)
+        userdict=getMembersOfMembable(g, useras, fqln)
         return jsonify(userdict)
 
 

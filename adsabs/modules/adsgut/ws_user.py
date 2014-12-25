@@ -234,7 +234,7 @@ for k in dispatch_table_get.keys():
         t2 = t + k2
         table_of_ops[t2]=k_table[k2]
 
-@adsgut.route('/userN/<nick>')
+@adsgut.route('/userN/<nick>', methods=['POST', 'GET'])
 def userEntryPoint(nick):
     if request.method=='GET':
         query=dict(request.args)
@@ -247,7 +247,7 @@ def userEntryPoint(nick):
             return userInfo(nick)
     elif request.method=='POST':
         jsonpost=dict(request.json)
-        op= oppostget('op')
+        op= oppostget(jsonpost)
         useras = userpostget(g, jsonpost)
         if op in table_of_ops.keys():
             f = table_of_ops[op]
