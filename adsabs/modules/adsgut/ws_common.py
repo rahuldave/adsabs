@@ -391,7 +391,7 @@ def addMemberToMembable(g, useras, member, fqpn, changerw):#fqmn/[changerw]
     user, membable=g.db.addMemberableToMembable(g.currentuser, useras, fqpn, member, changerw)
     return user, membable
 
-#Dont we want an ownermode for security in here? BUG
+#Dont we want an ownermode for security in here?
 def getMembersOfMembable(g, useras, fqpn):
     users=g.db.membersOfMembableFromFqin(g.currentuser,useras,fqpn)
     userdict={'users':users}

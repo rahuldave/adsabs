@@ -1,12 +1,12 @@
 from ws_common import *
 
-@adsgut.route('/library', methods=['POST'])#name/[description]/[useras]
-def createLibrary():
-    if request.method == 'POST':
-        newlibrary=createMembable(g, request, "library")
-        return jsonify(postable=newlibrary)
-    else:
-        doabort("BAD_REQ", "GET not supported")
+# @adsgut.route('/library', methods=['POST'])#name/[description]/[useras]
+# def createLibrary():
+#     if request.method == 'POST':
+#         newlibrary=createMembable(g, request, "library")
+#         return jsonify(postable=newlibrary)
+#     else:
+#         doabort("BAD_REQ", "GET not supported")
 
 @adsgut.route('/library', methods=['POST'])#libraryname/[description]/[useras]
 def create_or_delete_Library():
