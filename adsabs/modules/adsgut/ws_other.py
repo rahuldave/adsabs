@@ -136,9 +136,16 @@ def tagsRemoveForItem(ns, itemname):
         taggingsdict, taggingsthispostable, taggingsdefault= g.dbp.getTaggingsConsistentWithUserAndItems(g.currentuser, useras, [ifqin], None, fqpn)
         return jsonify(fqpn=fqpn, taggings=taggingsdict, taggingtp=taggingsthispostable, taggingsdefault=taggingsdefault)
 
+def save_items(g, useras, items, itemtype):
+    creator=useras.basic.fqin
+    if not itemtype:
+            doabort("BAD_REQ", "No itemtype specified for item")
+    for name in items:
+        itspec={'creator':creator, 'name':name, 'itemtype':itemtype}
+        newitem=g.dbp.saveItem(g.currentuser, useras, itspec)
+    return jsonify({'status':'OK', 'info':items})
 
-
-@adsgut.route('/itemsN')
+@adsgut.route('/itemsN', methods=['POST','GET'])
 def itemsEntryPoint():
     if request.method=='GET':
         query=dict(request.args)
@@ -162,8 +169,11 @@ def itemsEntryPoint():
         jsonpost=dict(request.json)
         op=oppostget(jsonpost)
         useras = userpostget(g, jsonpost)
-
-        if op=="add_libraries":
+        if op=="save_items":
+            items = itemspostget(jsonpost)
+            itemtype = dictp('itemtype', jsonpost)
+            return save_items(g, useras, items, itemtype)
+        elif op=="add_libraries":
             items = itemspostget(jsonpost)
             fqpo = postablesget(jsonpost)
             itemtype=dictp('itemtype', jsonpost)
@@ -174,7 +184,7 @@ def itemsEntryPoint():
             itemtype=dictp('itemtype', jsonpost)
             return add_taggings(g, useras, items, tagspecs, itemtype)
         elif op=="get_libraries_and_taggings":
-            itemsTaggingsAndPostings()
+            return itemsTaggingsAndPostings()
         else:#send an empty POST
             doabort('BAD_REQ', "No op given")
 #GET is used to get the taggings consistent with user for a set of items (unused currently)

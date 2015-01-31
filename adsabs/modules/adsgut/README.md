@@ -96,3 +96,9 @@ There is no pagination yet; this is built into the ptassets system but is not ex
 ### odd corners
 
 #### members in tags
+
+
+Things to deal with
+
+* uniform jsonification, especially $date in posting-documents.
+* are simple tags specific to library or across libraries? [i never remember this]

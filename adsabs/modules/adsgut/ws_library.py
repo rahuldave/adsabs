@@ -42,6 +42,7 @@ def libraryEntryPoint(libraryowner, libraryname):
             q= queryget(query)
             return get_tags(g, useras, usernick, lib.basic.fqin, q, criteria)
         elif op=='get_items':
+            print query
             format = dictg('format', query)
             sort = sortget(query)
             pagtuple = pagtupleget(query)
@@ -61,11 +62,11 @@ def libraryEntryPoint(libraryowner, libraryname):
         elif op=="add_items":
             itemtype= dictp('itemtype', jsonpost)
             items = itemspostget(jsonpost)
-            return add_items(g, useras, items, lib.basic.fqin)
-        elif op=="save_items":
-            items = itemspostget(jsonpost)
-            itemtype = dictp('itemtype', jsonpost)
-            return save_items(g, useras, items, itemtype)
+            return add_items(g, useras, items, lib.basic.fqin, itemtype)
+        # elif op=="save_items":
+        #     items = itemspostget(jsonpost)
+        #     itemtype = dictp('itemtype', jsonpost)
+        #     return save_items(g, useras, items, itemtype)
         elif op=="remove_member":
             member = dictp('member', jsonpost)
             return removeMember(useras, lib.basic.fqin, member)
@@ -270,15 +271,16 @@ def libraryInfo(libraryowner, libraryname):
 #this is the workhorse function for the library items page
 #the tags areimplicitly obtained through the posting document
 
-def add_items(g, useras, items, fqpn):
+def add_items(g, useras, items, fqpn, itemtype):
     pds=[]
     for name in items:
             itemspec={'name':name, 'itemtype':itemtype}
             i=g.dbp.saveItem(g.currentuser, useras, itemspec)
             i,pd=g.dbp.postItemIntoPostable(g.currentuser, useras, fqpn, i)
-            pds.append(pd)
+            pds.append(json.loads(pd.to_json()))
     #if this works send the posting documents back. note this will include
     #others posts in pd.hist but they are all in this library so there is no leakage
+    print pds
     itempostings={'status':'OK', 'postings':pds, 'postable':fqpn}
     return jsonify(itempostings)
 
@@ -310,6 +312,7 @@ def get_items(g, useras, usernick, fqpn, format, q, criteria, pagtuple, sort):
 
 @adsgut.route('/postable/<po>/<pt>:<pn>/items', methods=['GET', 'POST'])#user/items/itemtype
 def itemsForPostable(po, pt, pn):
+    fqpn=po+"/"+pt+":"+pn
     if request.method=='POST':
         jsonpost=dict(request.json)
         useras = userpostget(g, jsonpost)
@@ -317,8 +320,7 @@ def itemsForPostable(po, pt, pn):
         items = itemspostget(jsonpost)
         #also get the itemtypr
         itemtype= dictp('itemtype', jsonpost)
-        fqpn=po+"/"+pt+":"+pn
-        return add_items(g, useras, items, fqpn)
+        return add_items(g, useras, items, fqpn, itemtype)
     else:
         query=dict(request.args)
         useras, usernick= userget(g, query)
@@ -432,7 +434,7 @@ def tagsForPostable(po, pt, pn):
     useras, usernick= userget(g, query)
     #criteria currently unused
     criteria= criteriaget(query)
-    postable= po+"/"+pt+":"+pn
+    fqpn= po+"/"+pt+":"+pn
     #tagnames and tagtypes used in query to get only those tags compatible with the tag used
     #this is used for filtering in the user interface
     q= queryget(query)
@@ -463,7 +465,7 @@ def itemsremove():
 #GET could take a bunch of items as arguments, or a query
 #I dont believe GET is used. TODO: we should perhaps suppress the GET
 
-def save_items(g, useras, items, itemstype):
+def save_items(g, useras, items, itemtype):
     creator=useras.basic.fqin
     if not itemtype:
             doabort("BAD_REQ", "No itemtype specified for item")

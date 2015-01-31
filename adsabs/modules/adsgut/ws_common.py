@@ -217,7 +217,7 @@ def queryget(qdict):
 #the first is the item number to start from(offset), the second is the pagestyle.
 global _pagetupleget
 def pagtupleget(qdict):
-    pagtuplestring=dictg('pagtuple', qdict)
+    pagtuplestring=dictg('pagetuple', qdict)
     if not pagtuplestring:
         return None
     plist=pagtuplestring.split(':')
