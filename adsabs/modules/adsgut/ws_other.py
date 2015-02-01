@@ -38,7 +38,7 @@ def tags():
 
 
 @adsgut.route('/itemsN/<ns>/<itemname>', methods=['POST', 'GET'])
-def itemEntryPoint(na, itemname):
+def itemEntryPoint(ns, itemname):
     ifqin=ns+"/"+itemname
     if request.method=='GET':
         query=dict(request.args)
@@ -160,7 +160,7 @@ def itemsEntryPoint():
             items = itemsget(query)
             return get_postings(g, useras, items, sort)
         elif op=="get_libraries_and_taggings":
-            itemsTaggingsAndPostings()
+            return itemsTaggingsAndPostings()
         else:#any other op or no op
             sort = sortget(query)
             items = itemsget(query)
