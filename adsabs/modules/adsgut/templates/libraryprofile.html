@@ -67,12 +67,12 @@ $ ->
   config =
     fqpn : fqpn
     postablesURL: "#{prefix}/user/{{ useras.nick }}/profile/html"
-    infoURL : "#{prefix}/library/#{fqpn}"
-    membersURL : "#{prefix}/library/#{fqpn}/members"
-    invitedsURL : "#{prefix}/library/#{fqpn}/inviteds"
+    infoURL : "#{prefix}/libraryN/#{fqpn}"
+    membersURL : "#{prefix}/libraryN/#{fqpn}?op=get_members"
+    invitedsURL : "#{prefix}/libraryN/#{fqpn}?op=get_invitations"
     owner : if '{{owner}}' == 'True' then true else false
     useras_nick: '{{ useras.nick }}'
-    guiURL : "#{prefix}/user/{{useras.nick}}/groupsuserisin"
+    guiURL : "#{prefix}/user/{{useras.nick}}?op=get_groups_user_isin"
 
   sections =
     $infodiv : $('div#info')

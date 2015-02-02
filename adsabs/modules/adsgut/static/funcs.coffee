@@ -478,7 +478,7 @@ class MakePublic extends Backbone.View
         alert "Did not succeed: #{etext}"
 
     #console.log("GGG")
-    syncs.make_public(@postable, cback, eback)
+    syncs.add_anonymouse(@postable, cback, eback)
 
 class AddGroup extends Backbone.View
 

@@ -4,6 +4,9 @@ it might be possible to throw this into a Backbone.sync structure where we do CR
 of the library (rather than at the level of individual items)
 ###
 
+#IMPORTANT NOTE: for all items and fqpns in this file, assume they come
+#in from javascript appropriately URL escaped
+
 #set up globals
 root = exports ? this
 $=jQuery
@@ -11,6 +14,11 @@ h = teacup
 doajax=$.ajax
 #Get the Beer prefix, append adsgut to it
 prefix = GlobalVariables.ADS_PREFIX+"/adsgut"
+
+parse_fortype = (fqin) ->
+    vals = fqin.split(':')
+    vals2 = vals[-2+vals.length].split('/')
+    return vals2[-1+vals2.length]
 
 #send params simply sends a JSON dictionary 'data' as a POST request to 'url'
 send_params = (url, data, cback, eback) ->
@@ -49,47 +57,51 @@ send_bibcodes = (url, items, cback, eback) ->
 #the email of the user, and the fqpn (fully qualified name(fqin)) of the group or library being changed
 #currently this is only used by libraries
 change_ownership = (adsid, fqpn, cback, eback) ->
-    url= prefix+"/postable/"+fqpn+"/changes"
+    ptype = parse_fortype(fqpn)
+    url= prefix+"/"+ptype+"N/"+fqpn
     data=
         memberable:adsid
-        op:'changeowner'
+        op:'change_ownership'
     send_params(url, data, cback, eback)
 
 #for a given library with fqin 'fqpn', change whether a group or user with fqin 'fqmn'
 #can post into the library. Its a toggle: if the current status is read-only, the status will become
 #read-write
 toggle_rw = (fqmn, fqpn, cback, eback) ->
-    url= prefix+"/postable/"+fqpn+"/changes"
+    ptype = parse_fortype(fqpn)
+    url= prefix+"/"+ptype+"N/"+fqpn
     data=
         memberable:fqmn
-        op:'togglerw'
+        op:'change_permissions'
     send_params(url, data, cback, eback)
 
 #Change description of library to text 'description'. Why is there
 #a memberable 'crap' here? TODO
 change_description = (description, fqpn, cback, eback) ->
-    url= prefix+"/postable/"+fqpn+"/changes"
+    ptype = parse_fortype(fqpn)
+    url= prefix+"/"+ptype+"N/"+fqpn
     data=
-        memberable:"crap"
-        op:'description'
+        op:'change_description'
         description:description
     send_params(url, data, cback, eback)
 
 #A user with adsid 'adsid' (email) accepts an invitation to library `fqpn`
 accept_invitation = (adsid, fqpn, cback, eback) ->
-    url= prefix+"/postable/"+fqpn+"/changes"
+    ptype = parse_fortype(fqpn)
+    url= prefix+"/"+ptype+"N/"+fqpn
     data=
         memberable:adsid
-        op:'accept'
+        op:'accept_invitation'
     send_params(url, data, cback, eback)
 
 #Invite a user with email 'adsid' to library `fqpn` with a command to change read-only mode true
 #or false. The default mode for a user is read-only, so setting this to true changes the mode to read-write
 invite_user = (adsid, fqpn, changerw, cback, eback) ->
-    url= prefix+"/postable/"+fqpn+"/changes"
+    ptype = parse_fortype(fqpn)
+    url= prefix+"/"+ptype+"N/"+fqpn
     data=
         memberable:adsid
-        op:'invite'
+        op:'add_invitation'
         changerw:changerw
     send_params(url, data, cback, eback)
 
@@ -102,22 +114,27 @@ create_postable = (postable, postabletype, cback, eback) ->
     data=
         name:postable.name
         description:postable.description
+        op: "create_#{postabletype}"
     send_params(url, data, cback, eback)
 
 #add a group with fqin 'selectedgroup' as a member of a library 'fqpn'
 add_group = (selectedgrp, fqpn, changerw, cback, eback) ->
-    url= prefix+"/postable/"+fqpn+"/members"
+    ptype = "library"
+    url= prefix+"/"+ptype+"N/"+fqpn
     data=
         member: selectedgrp
         changerw: changerw
+        op: "add_member"
     send_params(url, data, cback, eback)
 
 #make a library 'fqpn' public. This involves adding the user anonymouse as a member.
-make_public = (fqpn, cback, eback) ->
-    url= prefix+"/postable/"+fqpn+"/members"
+add_anonymouse = (fqpn, cback, eback) ->
+    ptype = "library"
+    url= prefix+"/"+ptype+"N/"+fqpn
     data=
         member: 'adsgut/user:anonymouse'
         changerw: false
+        op: "add_member"
     send_params(url, data, cback, eback)
 
 #This one is not particularly useful and dosent seem to be used
@@ -127,7 +144,7 @@ get_postables = (user, cback, eback) ->
     #ary=user.split(':')
     #nick=ary[ary.length-1]
     nick=user
-    url= prefix+"/user/"+nick+"/postablesuserisin"
+    url= prefix+"/userN/"+nick+"?op=libraries_user_isin"
     do_get(url, cback, eback)
 
 #For a user, get the libraries you can access. The 'writable' is a misnomer
@@ -138,7 +155,7 @@ get_postables_writable = (user, cback, eback) ->
     #ary=user.split(':')
     #nick=ary[ary.length-1]
     nick=user
-    url= prefix+"/user/"+nick+"/postablesusercanwriteto"
+    url= prefix+"/userN/"+nick+"?op=libraries_user_canwriteto"
     do_get(url, cback, eback)
 
 #Takes an 'item' fqin, and also the 'itemname'(yes this repetition is bad)
@@ -151,13 +168,14 @@ get_postables_writable = (user, cback, eback) ->
 submit_note = (item, itemname, notetuple, ctxt, cback, eback) ->
     tagtype= "ads/tagtype:note"
     itemtype= "ads/itemtype:pub"
-    url= prefix+"/tags/"+item
+    url= prefix+"/itemsN/"+item
     ts={}
     ts[itemname] = [{content:notetuple[0], tagtype:tagtype, tagmode:notetuple[1]}]
     #console.log "whee", ts, notetuple
     data=
         tagspecs: ts
         itemtype:itemtype
+        op: "add_tags"
     if ctxt not in ['udg','pub','none']
         data.fqpn = ctxt
     if notetuple[0] != ""
@@ -172,7 +190,7 @@ submit_note = (item, itemname, notetuple, ctxt, cback, eback) ->
 submit_tag = (item, itemname, tag, pview, cback, eback) ->
     tagtype= "ads/tagtype:tag"
     itemtype= "ads/itemtype:pub"
-    url= prefix+"/tags/"+item
+    url= prefix+"/itemsN/"+item
     tagmode = '1'
     if pview is 'pub'
         #additionally, item must be made public. should public also mean all groups item is in
@@ -187,6 +205,7 @@ submit_tag = (item, itemname, tag, pview, cback, eback) ->
     data=
         tagspecs: ts
         itemtype:itemtype
+        op: "add_tags"
     if tag != ""
         send_params(url, data, cback, eback)
 
@@ -197,10 +216,11 @@ submit_tag = (item, itemname, tag, pview, cback, eback) ->
 
 remove_note = (item, tagname, fqtn, ctxt, cback, eback) ->
     tagtype= "ads/tagtype:note"
-    url= prefix+"/tagsremove/"+item
+    url= prefix+"/itemsN/"+item
     data=
         tagtype: tagtype
         tagname: tagname
+        op: "remove_tag"
     if fqtn!=undefined
         #console.log "FQTN IS", fqtn
         data.fqtn = fqtn
@@ -216,10 +236,11 @@ remove_note = (item, tagname, fqtn, ctxt, cback, eback) ->
 
 remove_tagging = (item, tagname, fqtn, ctxt, cback, eback) ->
     tagtype= "ads/tagtype:tag"
-    url= prefix+"/tagsremove/"+item
+    url= prefix+"/itemsN/"+item
     data=
         tagtype: tagtype
         tagname: tagname
+        op: "remove_tag"
     if fqtn!=undefined
         #console.log "FQTN IS", fqtn
         data.fqtn = fqtn
@@ -233,13 +254,16 @@ remove_tagging = (item, tagname, fqtn, ctxt, cback, eback) ->
 #remove items from a library. each item in the list is the fqin
 #ctxt is the library, or public. If its 'udg' or 'none', what happens?
 remove_items_from_postable = (items, ctxt, cback, eback) ->
-    url= prefix+"/itemsremove"
     data=
         items: items
+        op: "remove_items"
     if ctxt not in ['udg', 'none']
         data.fqpn = ctxt
     if ctxt=='public'
         data.fqpn = "adsgut/library:public"
+    # first, name = data.fqpn.split(':')
+    # quotedfqpn = first+":"+encodeURIComponent(name)
+    url= prefix+"/libraryN/#{data.fqpn}"
     send_params(url, data, cback, eback)
 
 
@@ -249,7 +273,7 @@ remove_items_from_postable = (items, ctxt, cback, eback) ->
 submit_tags = (items, tags, postables, cback, eback) ->
     tagtype= "ads/tagtype:tag"
     itemtype= "ads/itemtype:pub"
-    url= prefix+"/items/taggings"
+    url= prefix+"/itemsN"
     #console.log "TAGS ARE", tags,"EFFIN POSTS",postables
     ts={}
     inames=[]
@@ -270,6 +294,7 @@ submit_tags = (items, tags, postables, cback, eback) ->
             tagspecs: ts
             itemtype:itemtype
             items:inames
+            op: "add_taggings"
         send_params(url, data, cback, eback)
     else
         cback()
@@ -277,7 +302,7 @@ submit_tags = (items, tags, postables, cback, eback) ->
 submit_notes = (items, notetuples, cback, eback) ->
     tagtype= "ads/tagtype:note"
     itemtype= "ads/itemtype:pub"
-    url= prefix+"/items/taggings"
+    url= prefix+"/itemsN"
     ts={}
     inames=[]
     for i in items
@@ -291,6 +316,7 @@ submit_notes = (items, notetuples, cback, eback) ->
             tagspecs: ts
             itemtype:itemtype
             items:inames
+            op: "add_taggings"
         send_params(url, data, cback, eback)
     else
         cback()
@@ -300,12 +326,13 @@ submit_posts = (items, postables, cback, eback) ->
     itemtype= "ads/itemtype:pub"
     #console.log items, '|||', postables
     itemnames= (i.basic.name for i in items)
-    url= prefix+"/items/postings"
+    url= prefix+"/itemsN"
     if postables.length >0
         data=
             postables:postables
             itemtype:itemtype
             items:itemnames
+            op: "add_libraries"
         send_params(url, data, cback, eback)
     else
         cback()
@@ -316,10 +343,11 @@ save_items = (items, cback, eback) ->
     itemtype= "ads/itemtype:pub"
     #console.log items, '|||'
     itemnames= (i.basic.name for i in items)
-    url= prefix+"/items"
+    url= prefix+"/itemsN"
     data=
         items:itemnames
         itemtype:itemtype
+        op: "save_items"
     send_params(url, data, cback, eback)
 
 #get taggings and postings for item fqins in a library using POST
@@ -330,6 +358,7 @@ taggings_postings_post_get = (items, pview, cback) ->
         alert "Error Occurred"
     data=
         items:items
+        op: "get_libraries_and_taggings"
     #console.log "PVIEW", pview
     if pview not in ['udg', 'none', 'public']
         data.fqpn = pview
@@ -349,24 +378,28 @@ post_for_itemsinfo = (url, itemstring, cback) ->
 #removes a user or group using fqin from a library, or a user from a group.
 #The memberable is the former fqin, the membable is the latter
 remove_memberable_from_membable = (memberable, membable, cback, eback) ->
-    url= prefix+"/memberremove"
+    ptype = parse_fortype(membable)
+    url= prefix+"/#{ptype}"
     data=
         fqpn: membable
         member: memberable
+        op: "remove_member"
     send_params(url, data, cback, eback)
 
 #deletes a library or a group with fqin membable
 delete_membable = (membable, cback, eback) ->
-    url= prefix+"/membableremove"
+    ptype = parse_fortype(membable)
+    url= prefix+"/#{ptype}"
     data=
         fqpn: membable
+        op: "delete_#{ptype}"
     send_params(url, data, cback, eback)
 
 root.syncs=
     accept_invitation: accept_invitation
     invite_user: invite_user
     add_group: add_group
-    make_public: make_public
+    add_anonymouse: add_anonymouse
     change_ownership: change_ownership
     toggle_rw: toggle_rw
     get_postables: get_postables

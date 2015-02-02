@@ -50,10 +50,10 @@ $ ->
   prefix=GlobalVariables.ADS_PREFIX+'/adsgut'
   config =
     fqpn : '{{ thepostable.basic.fqin}}'
-    infoURL : "#{prefix}/group/{{ thepostable.basic.fqin}}"
+    infoURL : "#{prefix}/groupN/{{ thepostable.basic.fqin}}"
     postablesURL: "#{prefix}/email/{{ useras.adsid}}/profilegroups/html"
-    membersURL : "#{prefix}/group/{{ thepostable.basic.fqin}}/members"
-    invitedsURL : "#{prefix}/group/{{ thepostable.basic.fqin}}/inviteds"
+    membersURL : "#{prefix}/groupN/{{ thepostable.basic.fqin}}?op=get_members"
+    invitedsURL : "#{prefix}/groupN/{{ thepostable.basic.fqin}}?op=get_invitations"
     owner : if '{{owner}}' == 'True' then true else false
 
   sections =

@@ -4,7 +4,7 @@ $=jQuery
 h = teacup
 
 do_postform = (sections, config) ->
-    {itemstring, itemsInfoURL, itemsTPURL, tagsucwtURL, memberable, itemtype, nam, loc} = config
+    {itemstring, itemsInfoURL,  tagsucwtURL, memberable, itemtype, nam, loc} = config
     {$itemssec} = sections
     $.get "#{tagsucwtURL}?tagtype=ads/tagtype:tag", (data) ->
         #console.log("TUCWT===", itemstring)

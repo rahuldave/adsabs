@@ -25,7 +25,7 @@ $=jQuery
 
 $ ->
   config =
-    userInfoURL: "{{ url_for('adsgut.userInfo', nick=useras.nick) }}"
+    userInfoURL: "{{ url_for('adsgut.userEntryPoint', nick=useras.nick) }}"
     udgHtmlURL: "{{ url_for('adsgut.udlHtml', nick=useras.nick) }}"
   sections =
     $create: $('div#creategroups')
