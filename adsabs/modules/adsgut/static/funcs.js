@@ -644,7 +644,7 @@
       eback = function(xhr, etext) {
         return alert("Did not succeed: " + etext);
       };
-      return syncs.make_public(this.postable, cback, eback);
+      return syncs.add_anonymouse(this.postable, cback, eback);
     };
 
     return MakePublic;

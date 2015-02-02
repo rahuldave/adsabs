@@ -7,7 +7,7 @@ of the library (rather than at the level of individual items)
  */
 
 (function() {
-  var $, accept_invitation, add_group, change_description, change_ownership, create_postable, delete_membable, do_get, doajax, get_postables, get_postables_writable, h, invite_user, make_public, post_for_itemsinfo, prefix, remove_items_from_postable, remove_memberable_from_membable, remove_note, remove_tagging, root, save_items, send_bibcodes, send_params, submit_note, submit_notes, submit_posts, submit_tag, submit_tags, taggings_postings_post_get, toggle_rw;
+  var $, accept_invitation, add_anonymouse, add_group, change_description, change_ownership, create_postable, delete_membable, do_get, doajax, get_postables, get_postables_writable, h, invite_user, parse_fortype, post_for_itemsinfo, prefix, remove_items_from_postable, remove_memberable_from_membable, remove_note, remove_tagging, root, save_items, send_bibcodes, send_params, submit_note, submit_notes, submit_posts, submit_tag, submit_tags, taggings_postings_post_get, toggle_rw;
 
   root = typeof exports !== "undefined" && exports !== null ? exports : this;
 
@@ -18,6 +18,13 @@ of the library (rather than at the level of individual items)
   doajax = $.ajax;
 
   prefix = GlobalVariables.ADS_PREFIX + "/adsgut";
+
+  parse_fortype = function(fqin) {
+    var vals, vals2;
+    vals = fqin.split(':');
+    vals2 = vals[-2 + vals.length].split('/');
+    return vals2[-1 + vals2.length];
+  };
 
   send_params = function(url, data, cback, eback) {
     var params, stringydata, xhr;
@@ -64,52 +71,56 @@ of the library (rather than at the level of individual items)
   };
 
   change_ownership = function(adsid, fqpn, cback, eback) {
-    var data, url;
-    url = prefix + "/postable/" + fqpn + "/changes";
+    var data, ptype, url;
+    ptype = parse_fortype(fqpn);
+    url = prefix + "/" + ptype + "N/" + fqpn;
     data = {
       memberable: adsid,
-      op: 'changeowner'
+      op: 'change_ownership'
     };
     return send_params(url, data, cback, eback);
   };
 
   toggle_rw = function(fqmn, fqpn, cback, eback) {
-    var data, url;
-    url = prefix + "/postable/" + fqpn + "/changes";
+    var data, ptype, url;
+    ptype = parse_fortype(fqpn);
+    url = prefix + "/" + ptype + "N/" + fqpn;
     data = {
       memberable: fqmn,
-      op: 'togglerw'
+      op: 'change_permissions'
     };
     return send_params(url, data, cback, eback);
   };
 
   change_description = function(description, fqpn, cback, eback) {
-    var data, url;
-    url = prefix + "/postable/" + fqpn + "/changes";
+    var data, ptype, url;
+    ptype = parse_fortype(fqpn);
+    url = prefix + "/" + ptype + "N/" + fqpn;
     data = {
-      memberable: "crap",
-      op: 'description',
+      op: 'change_description',
       description: description
     };
     return send_params(url, data, cback, eback);
   };
 
   accept_invitation = function(adsid, fqpn, cback, eback) {
-    var data, url;
-    url = prefix + "/postable/" + fqpn + "/changes";
+    var data, ptype, url;
+    ptype = parse_fortype(fqpn);
+    url = prefix + "/" + ptype + "N/" + fqpn;
     data = {
       memberable: adsid,
-      op: 'accept'
+      op: 'accept_invitation'
     };
     return send_params(url, data, cback, eback);
   };
 
   invite_user = function(adsid, fqpn, changerw, cback, eback) {
-    var data, url;
-    url = prefix + "/postable/" + fqpn + "/changes";
+    var data, ptype, url;
+    ptype = parse_fortype(fqpn);
+    url = prefix + "/" + ptype + "N/" + fqpn;
     data = {
       memberable: adsid,
-      op: 'invite',
+      op: 'add_invitation',
       changerw: changerw
     };
     return send_params(url, data, cback, eback);
@@ -120,27 +131,32 @@ of the library (rather than at the level of individual items)
     url = prefix + ("/" + postabletype);
     data = {
       name: postable.name,
-      description: postable.description
+      description: postable.description,
+      op: "create_" + postabletype
     };
     return send_params(url, data, cback, eback);
   };
 
   add_group = function(selectedgrp, fqpn, changerw, cback, eback) {
-    var data, url;
-    url = prefix + "/postable/" + fqpn + "/members";
+    var data, ptype, url;
+    ptype = "library";
+    url = prefix + "/" + ptype + "N/" + fqpn;
     data = {
       member: selectedgrp,
-      changerw: changerw
+      changerw: changerw,
+      op: "add_member"
     };
     return send_params(url, data, cback, eback);
   };
 
-  make_public = function(fqpn, cback, eback) {
-    var data, url;
-    url = prefix + "/postable/" + fqpn + "/members";
+  add_anonymouse = function(fqpn, cback, eback) {
+    var data, ptype, url;
+    ptype = "library";
+    url = prefix + "/" + ptype + "N/" + fqpn;
     data = {
       member: 'adsgut/user:anonymouse',
-      changerw: false
+      changerw: false,
+      op: "add_member"
     };
     return send_params(url, data, cback, eback);
   };
@@ -148,14 +164,14 @@ of the library (rather than at the level of individual items)
   get_postables = function(user, cback, eback) {
     var nick, url;
     nick = user;
-    url = prefix + "/user/" + nick + "/postablesuserisin";
+    url = prefix + "/userN/" + nick + "?op=libraries_user_isin";
     return do_get(url, cback, eback);
   };
 
   get_postables_writable = function(user, cback, eback) {
     var nick, url;
     nick = user;
-    url = prefix + "/user/" + nick + "/postablesusercanwriteto";
+    url = prefix + "/userN/" + nick + "?op=libraries_user_canwriteto";
     return do_get(url, cback, eback);
   };
 
@@ -163,7 +179,7 @@ of the library (rather than at the level of individual items)
     var data, itemtype, tagtype, ts, url;
     tagtype = "ads/tagtype:note";
     itemtype = "ads/itemtype:pub";
-    url = prefix + "/tags/" + item;
+    url = prefix + "/itemsN/" + item;
     ts = {};
     ts[itemname] = [
       {
@@ -174,7 +190,8 @@ of the library (rather than at the level of individual items)
     ];
     data = {
       tagspecs: ts,
-      itemtype: itemtype
+      itemtype: itemtype,
+      op: "add_tags"
     };
     if (ctxt !== 'udg' && ctxt !== 'pub' && ctxt !== 'none') {
       data.fqpn = ctxt;
@@ -188,7 +205,7 @@ of the library (rather than at the level of individual items)
     var data, itemtype, tagmode, tagtype, ts, url;
     tagtype = "ads/tagtype:tag";
     itemtype = "ads/itemtype:pub";
-    url = prefix + "/tags/" + item;
+    url = prefix + "/itemsN/" + item;
     tagmode = '1';
     if (pview === 'pub') {
       tagmode = '0';
@@ -207,7 +224,8 @@ of the library (rather than at the level of individual items)
     ];
     data = {
       tagspecs: ts,
-      itemtype: itemtype
+      itemtype: itemtype,
+      op: "add_tags"
     };
     if (tag !== "") {
       return send_params(url, data, cback, eback);
@@ -217,10 +235,11 @@ of the library (rather than at the level of individual items)
   remove_note = function(item, tagname, fqtn, ctxt, cback, eback) {
     var data, tagtype, url;
     tagtype = "ads/tagtype:note";
-    url = prefix + "/tagsremove/" + item;
+    url = prefix + "/itemsN/" + item;
     data = {
       tagtype: tagtype,
-      tagname: tagname
+      tagname: tagname,
+      op: "remove_tag"
     };
     if (fqtn !== void 0) {
       data.fqtn = fqtn;
@@ -237,10 +256,11 @@ of the library (rather than at the level of individual items)
   remove_tagging = function(item, tagname, fqtn, ctxt, cback, eback) {
     var data, tagtype, url;
     tagtype = "ads/tagtype:tag";
-    url = prefix + "/tagsremove/" + item;
+    url = prefix + "/itemsN/" + item;
     data = {
       tagtype: tagtype,
-      tagname: tagname
+      tagname: tagname,
+      op: "remove_tag"
     };
     if (fqtn !== void 0) {
       data.fqtn = fqtn;
@@ -256,9 +276,9 @@ of the library (rather than at the level of individual items)
 
   remove_items_from_postable = function(items, ctxt, cback, eback) {
     var data, url;
-    url = prefix + "/itemsremove";
     data = {
-      items: items
+      items: items,
+      op: "remove_items"
     };
     if (ctxt !== 'udg' && ctxt !== 'none') {
       data.fqpn = ctxt;
@@ -266,6 +286,7 @@ of the library (rather than at the level of individual items)
     if (ctxt === 'public') {
       data.fqpn = "adsgut/library:public";
     }
+    url = prefix + ("/libraryN/" + data.fqpn);
     return send_params(url, data, cback, eback);
   };
 
@@ -273,7 +294,7 @@ of the library (rather than at the level of individual items)
     var data, fqin, i, inames, itemtype, name, p, t, tagtype, ts, url, _i, _j, _k, _len, _len1, _len2, _ref;
     tagtype = "ads/tagtype:tag";
     itemtype = "ads/itemtype:pub";
-    url = prefix + "/items/taggings";
+    url = prefix + "/itemsN";
     ts = {};
     inames = [];
     for (_i = 0, _len = items.length; _i < _len; _i++) {
@@ -308,7 +329,8 @@ of the library (rather than at the level of individual items)
       data = {
         tagspecs: ts,
         itemtype: itemtype,
-        items: inames
+        items: inames,
+        op: "add_taggings"
       };
       return send_params(url, data, cback, eback);
     } else {
@@ -320,7 +342,7 @@ of the library (rather than at the level of individual items)
     var data, fqin, i, inames, itemtype, name, nt, tagtype, ts, url, _i, _len;
     tagtype = "ads/tagtype:note";
     itemtype = "ads/itemtype:pub";
-    url = prefix + "/items/taggings";
+    url = prefix + "/itemsN";
     ts = {};
     inames = [];
     for (_i = 0, _len = items.length; _i < _len; _i++) {
@@ -349,7 +371,8 @@ of the library (rather than at the level of individual items)
       data = {
         tagspecs: ts,
         itemtype: itemtype,
-        items: inames
+        items: inames,
+        op: "add_taggings"
       };
       return send_params(url, data, cback, eback);
     } else {
@@ -369,12 +392,13 @@ of the library (rather than at the level of individual items)
       }
       return _results;
     })();
-    url = prefix + "/items/postings";
+    url = prefix + "/itemsN";
     if (postables.length > 0) {
       data = {
         postables: postables,
         itemtype: itemtype,
-        items: itemnames
+        items: itemnames,
+        op: "add_libraries"
       };
       return send_params(url, data, cback, eback);
     } else {
@@ -394,10 +418,11 @@ of the library (rather than at the level of individual items)
       }
       return _results;
     })();
-    url = prefix + "/items";
+    url = prefix + "/itemsN";
     data = {
       items: itemnames,
-      itemtype: itemtype
+      itemtype: itemtype,
+      op: "save_items"
     };
     return send_params(url, data, cback, eback);
   };
@@ -409,7 +434,8 @@ of the library (rather than at the level of individual items)
       return alert("Error Occurred");
     };
     data = {
-      items: items
+      items: items,
+      op: "get_libraries_and_taggings"
     };
     if (pview !== 'udg' && pview !== 'none' && pview !== 'public') {
       data.fqpn = pview;
@@ -429,20 +455,23 @@ of the library (rather than at the level of individual items)
   };
 
   remove_memberable_from_membable = function(memberable, membable, cback, eback) {
-    var data, url;
-    url = prefix + "/memberremove";
+    var data, ptype, url;
+    ptype = parse_fortype(membable);
+    url = prefix + ("/" + ptype + "N/") + membable;
     data = {
-      fqpn: membable,
-      member: memberable
+      member: memberable,
+      op: "remove_member"
     };
     return send_params(url, data, cback, eback);
   };
 
   delete_membable = function(membable, cback, eback) {
-    var data, url;
-    url = prefix + "/membableremove";
+    var data, ptype, url;
+    ptype = parse_fortype(membable);
+    url = prefix + ("/" + ptype);
     data = {
-      fqpn: membable
+      fqpn: membable,
+      op: "delete_" + ptype
     };
     return send_params(url, data, cback, eback);
   };
@@ -451,7 +480,7 @@ of the library (rather than at the level of individual items)
     accept_invitation: accept_invitation,
     invite_user: invite_user,
     add_group: add_group,
-    make_public: make_public,
+    add_anonymouse: add_anonymouse,
     change_ownership: change_ownership,
     toggle_rw: toggle_rw,
     get_postables: get_postables,

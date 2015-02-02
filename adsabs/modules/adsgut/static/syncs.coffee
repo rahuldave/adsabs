@@ -379,9 +379,8 @@ post_for_itemsinfo = (url, itemstring, cback) ->
 #The memberable is the former fqin, the membable is the latter
 remove_memberable_from_membable = (memberable, membable, cback, eback) ->
     ptype = parse_fortype(membable)
-    url= prefix+"/#{ptype}"
+    url= prefix+"/#{ptype}N/"+membable
     data=
-        fqpn: membable
         member: memberable
         op: "remove_member"
     send_params(url, data, cback, eback)

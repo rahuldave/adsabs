@@ -72,7 +72,7 @@ $ ->
     invitedsURL : "#{prefix}/libraryN/#{fqpn}?op=get_invitations"
     owner : if '{{owner}}' == 'True' then true else false
     useras_nick: '{{ useras.nick }}'
-    guiURL : "#{prefix}/user/{{useras.nick}}?op=get_groups_user_isin"
+    guiURL : "#{prefix}/userN/{{useras.nick}}?op=get_groups_user_isin"
 
   sections =
     $infodiv : $('div#info')

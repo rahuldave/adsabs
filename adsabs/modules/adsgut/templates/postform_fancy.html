@@ -38,7 +38,7 @@ $ ->
     itemstring :  "{{ querystring | safe }}"
     loc : "{{curpage | safe }}"
     itemsInfoURL :  "{{ url_for('adsgut.itemsinfo') }}"
-    tagsucwtURL: "{{ url_for('adsgut.tagsUserCanWriteTo', nick=useras.nick) }}"
+    tagsucwtURL: "{{ url_for('adsgut.userEntryPoint', nick=useras.nick) }}?op=get_tags_user_canwriteto"
     bq1url : "{{ url_for('adsgut.get_bigquery_solr') }}"
     itemtype : '{{itemtype}}'
     memberable :

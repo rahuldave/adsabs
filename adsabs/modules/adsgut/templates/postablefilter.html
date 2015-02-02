@@ -77,13 +77,11 @@ $ ->
   config =
     fqpn : fqpn
     infoURL : "#{prefix}/{{p.classname}}/#{fqpn}"
-    itemsPURL : "{{ url_for('adsgut.itemsForPostable', po=po, pt=pt, pn=pn) }}?#{vars}"
-    jsonPURL : "{{ url_for('adsgut.jsonItemsForPostable', po=po, pt=pt, pn=pn) }}?#{vars}"
-    csvPURL : "{{ url_for('adsgut.csvItemsForPostable', po=po, pt=pt, pn=pn) }}?#{vars}"
-    tagsPURL : "{{ url_for('adsgut.tagsForPostable', po=po, pt=pt, pn=pn) }}?#{vars}"
-    itPURL : "{{ url_for('adsgut.itemsTaggingsAndPostings') }}"
-    itURL : "{{ url_for('adsgut.itemsTaggings') }}"
-    tagsucwtURL: "{{ url_for('adsgut.tagsUserCanWriteTo', nick=useras.nick) }}"
+    itemsPURL : "{{ url_for('adsgut.libraryEntryPoint', libraryowner=po, libraryname=pn) }}?#{vars}&op=get_items"
+    jsonPURL : "{{ url_for('adsgut.libraryEntryPoint', libraryowner=po, libraryname=pn) }}?#{vars}&format=json&op=get_items"
+    csvPURL : "{{ url_for('adsgut.libraryEntryPoint', libraryowner=po, libraryname=pn) }}?#{vars}&format=csv&op=get_items"
+    tagsPURL : "{{ url_for('adsgut.libraryEntryPoint', libraryowner=po, libraryname=pn) }}?#{vars}&op=get_tags"
+    tagsucwtURL: "{{ url_for('adsgut.userEntryPoint', nick=useras.nick) }}?op=get_tags_user_canwriteto"
     bq1url : "{{ url_for('adsgut.get_bigquery_solr') }}"
     bq2url : GlobalVariables.ADS_PREFIX+"/search/bigquery/"
     memberable:
